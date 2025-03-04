@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 	<head>
 		<title>Template</title>
@@ -13,53 +13,4 @@
 			
 		</main>
 	</body>
-</html> -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Login</title>
-	<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-</head>
-<body>
-	<h2>Login</h2>
-	<input type="email" id="email" placeholder="Email">
-	<input type="password" id="password" placeholder="Password">
-	<button onclick="login()">Login</button>
-	<button onclick="register()">Register</button>
-	<p id="msg"></p>
-
-	<script>
-async function login() {
-	let email = document.getElementById("email").value;
-	let password = document.getElementById("password").value;
-
-	let response = await fetch("/api/login", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, password })
-	});
-
-	let result = await response.json();
-	document.getElementById("msg").innerText = result.success ? "Logged in!" : result.error;
-	if (result.success) window.open("about:blank");
-}
-
-async function register() {
-	let email = document.getElementById("email").value;
-	let password = document.getElementById("password").value;
-
-	let response = await fetch("/api/register", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, password })
-	});
-
-	let result = await response.json();
-	document.getElementById("msg").innerText = result.success ? "Registered! Now log in." : result.error;
-}
-</script>
-</body>
 </html>
