@@ -33,32 +33,32 @@
 
 	<script>
 async function login() {
-    let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
+	let email = document.getElementById("email").value;
+	let password = document.getElementById("password").value;
 
-    let response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    });
+	let response = await fetch("/api/login", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ email, password })
+	});
 
-    let result = await response.json();
-    document.getElementById("msg").innerText = result.success ? "Logged in!" : result.error;
-    if (result.success) window.open("about:blank");
+	let result = await response.json();
+	document.getElementById("msg").innerText = result.success ? "Logged in!" : result.error;
+	if (result.success) window.open("about:blank");
 }
 
 async function register() {
-    let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
+	let email = document.getElementById("email").value;
+	let password = document.getElementById("password").value;
 
-    let response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    });
+	let response = await fetch("/api/register", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ email, password })
+	});
 
-    let result = await response.json();
-    document.getElementById("msg").innerText = result.success ? "Registered! Now log in." : result.error;
+	let result = await response.json();
+	document.getElementById("msg").innerText = result.success ? "Registered! Now log in." : result.error;
 }
 </script>
 </body>
