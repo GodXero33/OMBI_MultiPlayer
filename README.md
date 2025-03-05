@@ -7,27 +7,28 @@ OmbiArenaLK is a web-based platform designed for Sri Lankan players, particularl
 ```
 OMBI/
 ├── docs/              # Database schema, documentation, and reports
-├── OmbiBackend/       # Java Spring Boot backend (Database & API)
-├── OmbiFrontend/      # Vanilla JavaScript-based frontend (User Interface)
+├── OmbiBackend/       # Java Spring Boot backend (Database, API, and Authentication)
+├── OmbiFrontend/      # Express.js static server (Serves UI)
 ├── OmbiWSServer/      # Node.js WebSocket server (Real-time multiplayer)
 └── README.md          # Project overview and setup guide
 ```
 
 ## 🚀 Features
 - **Real-time multiplayer** with WebSocket-based gameplay
+- **User authentication & account management** (Handled in Spring Boot backend)
 - **Simple & intuitive UI** tailored for elder users
 - **Lobby system** for players to wait until enough players join
 - **Secure & scalable architecture**
 - **Future-proof:** AI bots, private matches, spectator mode, and tournaments
 
 ## 🛠️ Tech Stack
-- **Frontend:** Vanilla JavaScript
-- **Backend:** Java Spring Boot (Database & API)
+- **Frontend:** Express.js (Static file serving)
+- **Backend:** Java Spring Boot (Database, API, Authentication)
 - **WebSocket Server:** Node.js
 - **Database:** MySQL
 - **Hosting:** Self-hosted (Planned future cloud deployment)
 
-## 📦 Setup Guide
+## 🛆 Setup Guide
 ### 1️⃣ Clone the Repository
 ```sh
 git clone https://github.com/your-repo/OmbiArenaLK.git
@@ -47,7 +48,6 @@ mvn spring-boot:run
 cd OmbiWSServer
 npm install
 node game-server.js
-node lobby-server.js
 ```
 In another terminal window:
 ```sh
@@ -55,24 +55,19 @@ cd OmbiWSServer
 node lobby-server.js
 ```
 
-### 4️⃣ Frontend Setup (Vanilla JavaScript)
+### 4️⃣ Frontend Setup (Express.js Static Server)
 To set up your frontend, follow these steps:
 
-1. Create a `.env` file in the `OmbiFrontend` directory with the following content:
-    ```ini
-    PORT=5500
-    DB_HOST=localhost
-    DB_USER=yourUsername
-    DB_PASSWORD=yourPassword
-    DB_NAME=yourDatabaseName
+1. Navigate to the `OmbiFrontend` directory and install dependencies:
+    ```sh
+    cd OmbiFrontend
+    npm install
     ```
-
-2. Open a terminal in the `OmbiFrontend` directory, then run the following command:
+2. Start the Express server:
     ```sh
     node server.js
     ```
-
-This will start the server on port 5500, and the public folder will be deployed as a static site with APIs running on port 5500.
+This will serve the frontend UI as a static website.
 
 ### 5️⃣ Database Setup
 In the `docs` folder, the `db.sql` file is provided for quick and error-free database creation. Simply import this file into your MySQL database to set up the schema.
@@ -88,4 +83,4 @@ OmbiArenaLK aims to **modernize traditional Sri Lankan card games** while keepin
 
 ---
 🚀 *Work in progress. Stay tuned!*
-```
+
