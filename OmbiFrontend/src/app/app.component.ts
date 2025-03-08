@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CanvasComponent } from './component/canvas/canvas.component';
+import { CanvasComponent } from './component/game/game.component';
 
 @Component({
   selector: 'app-root',

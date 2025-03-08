@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { CanvasComponent } from './component/canvas/canvas.component';
+import { CanvasComponent } from './component/game/game.component';
 
 export const routes: Routes = [
 	{
