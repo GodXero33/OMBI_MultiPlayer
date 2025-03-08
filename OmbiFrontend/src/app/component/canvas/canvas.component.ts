@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
-import { World } from './world';
+import { OMBIBoard } from './ombi-board';
 
 @Component({
   selector: 'app-canvas',
@@ -8,18 +8,24 @@ import { World } from './world';
 })
 export class CanvasComponent implements OnInit {
   @ViewChild('myCanvas', { static: true }) canvas!:ElementRef<HTMLCanvasElement>;
+  @ViewChild('loadingCover', { static: true }) loadingCover!:ElementRef<HTMLDivElement>;
   private ctx!:CanvasRenderingContext2D | null;
   private animationFrameId:number = 0;
   private width:number = window.innerWidth;
   private height:number = window.innerHeight;
-  private world!:World;
+  private board!:OMBIBoard;
 
   ngOnInit ():void {
     this.ctx = this.canvas.nativeElement.getContext('2d');
-    this.world = new World(this.width, this.height);
+    this.board = new OMBIBoard(this.width, this.height, this.onResourceLoaded.bind(this));
+  }
 
-    this.resizeCanvas();
-    this.animate();
+  onResourceLoaded ():void {
+    setTimeout(() => {
+      this.loadingCover.nativeElement.classList.add('hide');
+      this.resizeCanvas();
+      this.animate();
+    }, 500);
   }
 
   // Resize canvas to full screen
@@ -31,8 +37,8 @@ export class CanvasComponent implements OnInit {
     canvasEl.width = this.width;
     canvasEl.height = this.height;
 
-    if (this.world) {
-      this.world.setSize(this.width, this.height);
+    if (this.board) {
+      this.board.setSize(this.width, this.height);
     }
   }
 
@@ -46,8 +52,14 @@ export class CanvasComponent implements OnInit {
   animate ():void {
     if (!this.ctx) return;
 
-    this.world.update();
-    this.world.draw(this.ctx);
+    this.board.update();
+
+    const transform:DOMMatrix = this.ctx.getTransform();
+
+    this.ctx.translate(this.width * 0.5, this.height * 0.5);
+    this.board.draw(this.ctx);
+
+    this.ctx.setTransform(transform);
 
     this.animationFrameId = requestAnimationFrame(() => this.animate());
   }
