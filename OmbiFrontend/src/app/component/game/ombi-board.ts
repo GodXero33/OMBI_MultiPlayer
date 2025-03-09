@@ -34,7 +34,7 @@ class OMBIBoard {
 		this.getDOMs(container);
 		this.loadImages(onResourceLoadedCallback);
 
-		// this.cards.forEach((card, index) => card.append(this.playerDOMs[index % 8]));
+		this.cards.forEach((card, index) => card.append(this.playerDOMs[index % 8]));
 
 		console.log(this);
 	}

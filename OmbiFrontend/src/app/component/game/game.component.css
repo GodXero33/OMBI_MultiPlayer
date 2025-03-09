@@ -6,26 +6,30 @@
 	height: 100vh;
 }
 
+#cards-container {
+	--doc-width: calc(min(100vh, 100vw) * (var(--doc-ratio) - 1) / var(--doc-ratio));
+	--doc-ratio: 8;
+}
+
 #cards-container > div {
 	position: absolute;
 	margin: auto;
 	display: grid;
-	grid-template-columns: repeat(8, 12.5%);
+	grid-template-columns: repeat(var(--doc-ratio), calc(100% / var(--doc-ratio)));
 }
 
 #cards-container > div:first-child {
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	width: 50%;
-	height: 50%;
+	top:50%;
+	left: 50%;
+	width: calc(100vw - var(--doc-width) * 0.5);
+	height: calc(100vh - var(--doc-width) * 0.5);
+	transform: translate(-50%, -50%);
 	background-color: red;
 }
 
 #cards-container > div:not(:first-child) {
-	width: min(100vh, 100vw);
-	aspect-ratio: 8 / 1;
+	width: var(--doc-width);
+	aspect-ratio: var(--doc-ratio) / 1;
 }
 
 #cards-container > div:nth-child(2) {
@@ -36,16 +40,25 @@
 }
 
 #cards-container > div:nth-child(3) {
-	right: 0;
-	transform: rotate(90deg) translateY(50%);
+	right: calc(var(--doc-width) / (var(--doc-ratio) * 2));
+	top: calc(100vh * 0.5 + var(--doc-width) * 0.5);
+	transform: translateY(-50%) rotate(90deg);
+	transform-origin: right center;
 	background-color: blue;
 }
 
 #cards-container > div:nth-child(4) {
+	top: 0;
+	left: 0;
+	right: 0;
 	background-color: pink;
 }
 
 #cards-container > div:nth-child(5) {
+	left: calc(var(--doc-width) / (var(--doc-ratio) * 2));
+	top: calc(100vh * 0.5 + var(--doc-width) * 0.5);
+	transform: translateY(-50%) rotate(-90deg);
+	transform-origin: left center;
 	background-color: aqua;
 }
 
@@ -54,7 +67,7 @@
 		position: relative;
 		top: 0;
 		left: 0;
-		width: auto;
+		width: 100%;
 		height: 100%;
 	}
 }
