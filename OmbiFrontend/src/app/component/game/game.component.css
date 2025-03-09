@@ -6,27 +6,56 @@
 	height: 100vh;
 }
 
-#cards-container {
-	--card-min-width: 100px;
-	--card-max-width: 250px;
+#cards-container > div {
+	position: absolute;
+	margin: auto;
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(clamp(var(--card-min-width), 100%, var(--card-max-width)), 1fr));
-	overflow-x: hidden;
+	grid-template-columns: repeat(8, 12.5%);
+}
 
-	.card {
-		cursor: pointer;
-		
-		&, img {
-			position: relative;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: auto;
-		}
+#cards-container > div:first-child {
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: 50%;
+	height: 50%;
+	background-color: red;
+}
 
-		& img {
-			pointer-events: none;
-		}
+#cards-container > div:not(:first-child) {
+	width: min(100vh, 100vw);
+	aspect-ratio: 8 / 1;
+}
+
+#cards-container > div:nth-child(2) {
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: green;
+}
+
+#cards-container > div:nth-child(3) {
+	right: 0;
+	transform: rotate(90deg) translateY(50%);
+	background-color: blue;
+}
+
+#cards-container > div:nth-child(4) {
+	background-color: pink;
+}
+
+#cards-container > div:nth-child(5) {
+	background-color: aqua;
+}
+
+#cards-container > div .card {
+	&, & img {
+		position: relative;
+		top: 0;
+		left: 0;
+		width: auto;
+		height: 100%;
 	}
 }
 
