@@ -1,0 +1,17 @@
+<html>
+<head><title>Logs</title></head>
+<body>
+	<div id="logs"></div>
+	<!-- Include the socket.io.js script from the server -->
+	<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+	<script>
+		const socket = io('http://localhost:8080');	// Initialize the socket connection
+
+		// Listen for 'log' event from server and append it to the logs
+		socket.on('log', function(data) {
+			const logContainer = document.getElementById('logs');
+			logContainer.innerHTML += `<p>${data}</p>`;
+		});
+	</script>
+</body>
+</html>
