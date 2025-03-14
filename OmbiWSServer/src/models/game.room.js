@@ -2,6 +2,7 @@ export class GameRoom {
 	constructor (ids) {
 		this.waitingIds = ids;
 		this.clients = [];
+		this.isOpen = true;
 	}
 
 	addClient (client) {
@@ -36,5 +37,17 @@ export class GameRoom {
 		this.clients.forEach(client => console.log(client.id));
 
 		console.log('}');
+	}
+
+	close () {
+		if (!this.isOpen) return;
+
+		this.isOpen = false;
+
+		this.clients.forEach(client => {
+			const ws = client.ws;
+
+			if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+		});
 	}
 }

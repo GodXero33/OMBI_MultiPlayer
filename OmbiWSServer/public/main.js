@@ -55,7 +55,7 @@ function addToWaitList () {
 }
 
 function connectToGameServer (port) {
-	gameSocket = new WebSocket(`${protocol}://${window.location.hostname}:${port}`);
+	gameSocket = new WebSocket(`${protocol}://${window.location.hostname}:${port}/${id}`);
 
 	gameSocket.onopen = () => {
 		console.log('Connected to game server');
