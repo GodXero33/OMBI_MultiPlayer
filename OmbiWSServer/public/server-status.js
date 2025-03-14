@@ -38,6 +38,9 @@ async function loadServerDetails () {
 		updateStatusInfo(data);
 	} catch (error) {
 		console.error(error);
+
+		document.body.innerHTML = '<h1>Error: Server not found.</h1>';
+		isLastStatusReceived = true;
 	}
 }
 
