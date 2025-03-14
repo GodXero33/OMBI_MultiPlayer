@@ -35,6 +35,8 @@ apiRouter.post('/wait-list', (req, res) => {
 	return res.json({ ok: true });
 });
 
+apiRouter.get('/server-status', (req, res) => res.json(getServerStatus()));
+
 httpServer.listen(PORT, () => {
 	console.log(`API list server running on http://127.0.0.1:${PORT}`);
 });
@@ -63,6 +65,17 @@ lobbyWSServer.on('connection', (ws, req) => {
 	ws.on('close', () => onClientClose(ws));
 	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
 });
+
+// Return object of complete server status.
+function getServerStatus () {
+	const status = {
+		lobbyClients,
+		waitList,
+		gameWSServers
+	};
+
+	return status;
+}
 
 // Check if wait list has at least four clients. If it is all clients push to available game server and empty wait list.
 function checkWaitList () {
