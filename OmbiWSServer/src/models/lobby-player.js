@@ -1,4 +1,4 @@
-export class LobbyClient {
+export class LobbyPlayer {
 	constructor (ws, lobbyPlayerInfo) {
 		this.ws = ws;
 		this.id = lobbyPlayerInfo.playerId;

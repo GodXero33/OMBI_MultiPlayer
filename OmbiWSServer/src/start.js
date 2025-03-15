@@ -4,7 +4,7 @@ const net = require('net');
 const { Worker } = require('worker_threads');
 const WebSocket = require('ws');
 const cors = require('cors');
-const { LobbyClient } = require('./models/client.lobby');
+const { LobbyPlayer } = require('./models/lobby-player');
 const { ServerStatusAPI } = require('./server/server-status');
 
 const apiRouter = express();
@@ -12,23 +12,23 @@ const httpServer = http.createServer(apiRouter);
 const lobbyWSServer  = new WebSocket.Server({ server: httpServer });
 
 const PORT = 8080;
-let lobbyClients = [];
+let lobbyPlayers = [];
 let waitList = [];
 let gameWSServers = [];
 
 apiRouter.use(cors());
 apiRouter.use(express.json());
 
-// Add client to wait list.
+// Add player to wait list.
 apiRouter.post('/wait-list', (req, res) => {
-	const clientId = req.body.id;
-	const targetClient = lobbyClients.find(client => client.id == clientId);
+	const playerId = req.body.id;
+	const targetPlayer = lobbyPlayers.find(player => player.id == playerId);
 
-	// If target client is undefined or target client is a match, can't add to wait list.
-	if (!targetClient || targetClient.inMatch) return res.json({ ok: false });
+	// If target player is undefined or target player is a match, can't add to wait list.
+	if (!targetPlayer || targetPlayer.inMatch) return res.json({ ok: false });
 
-	if (!waitList.includes(targetClient)) {
-		waitList.push(targetClient);
+	if (!waitList.includes(targetPlayer)) {
+		waitList.push(targetPlayer);
 		checkWaitList();
 	}
 
@@ -36,7 +36,7 @@ apiRouter.post('/wait-list', (req, res) => {
 });
 
 apiRouter.get('/server-status', async (req, res) => {
-	const serverStatus = await ServerStatusAPI.getServerStatus(lobbyClients, waitList, gameWSServers);
+	const serverStatus = await ServerStatusAPI.getServerStatus(lobbyPlayers, waitList, gameWSServers);
 	res.json(serverStatus);
 });
 
@@ -45,43 +45,43 @@ httpServer.listen(PORT, () => {
 });
 
 lobbyWSServer.on('connection', async (ws, req) => {
-	const clientId = req.url.split('/').pop();
+	const playerId = req.url.split('/').pop();
 
-	ws.on('message', (msg) => onMessageFromClient(ws, msg));
-	ws.on('close', () => onClientClose(ws));
+	ws.on('message', (msg) => onMessageFromPlayer(ws, msg));
+	ws.on('close', () => onPlayerClose(ws));
 	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
 
-	console.log(`Client connected with ID: ${clientId}`);
+	console.log(`Player connected with ID: ${playerId}`);
 
-	const lobbyPlayerInfo = await getLobbyPlayerInfo(clientId);
+	const lobbyPlayerInfo = await getLobbyPlayerInfo(playerId);
 
-	if (lobbyPlayerInfo instanceof LobbyClient) {
-		sendMessageToLobbyClient(ws, { type: 'error', message: 'User already logged in.' });
+	if (lobbyPlayerInfo instanceof LobbyPlayer) {
+		sendMessageToLobbyPlayer(ws, { type: 'error', message: 'User already logged in.' });
 		ws.close();
 		return;
 	}
 
 	if (lobbyPlayerInfo == null) {
-		sendMessageToLobbyClient(ws, { type: 'error', message: 'Not a user.' });
+		sendMessageToLobbyPlayer(ws, { type: 'error', message: 'Not a user.' });
 		ws.close();
 		return;
 	}
 
-	lobbyClients.push(new LobbyClient(ws, lobbyPlayerInfo));
+	lobbyPlayers.push(new LobbyPlayer(ws, lobbyPlayerInfo));
 });
 
 /**
- * Check if wait list has at least four clients. If it is all clients push to available game server and empty wait list.
+ * Check if wait list has at least four players. If it is all players push to available game server and empty wait list.
  */
 function checkWaitList () {
 	if (waitList.length != 2) return;
 
 	const { worker, port } = getAvailableGameServer();
 	
-	postMessageToGameWSServer(worker, { type: 'new-room', ids: waitList.map(client => client.id) });
+	postMessageToGameWSServer(worker, { type: 'new-room', ids: waitList.map(player => player.id) });
 
-	waitList.forEach(client => {
-		sendMessageToLobbyClient(client.ws, { type: 'game-server-port', port });
+	waitList.forEach(player => {
+		sendMessageToLobbyPlayer(player.ws, { type: 'game-server-port', port });
 	});
 
 	waitList.length = 0;
@@ -99,12 +99,12 @@ function getAvailableGameServer () {
 /**
  * Get player details from the database.
  * 
- * @param {number} clientId 
+ * @param {number} playerId 
  * @returns {Promise<{ id: number, playerId: string, playerName: string, password: string, gmail: string }>}
  */
-function getPlayerDetailsByPlayerId (clientId) {
+function getPlayerDetailsByPlayerId (playerId) {
 	return new Promise((res, req) => {
-		fetch(`http://127.0.0.1:5501/player/get/${clientId}`).then(response => {
+		fetch(`http://127.0.0.1:5501/player/get/${playerId}`).then(response => {
 			if (!response.ok) throw new Error('Failed to fetch player data.');
 
 			return response.json();
@@ -117,16 +117,16 @@ function getPlayerDetailsByPlayerId (clientId) {
 }
 
 /**
- * @param {number} clientId - ID of the player that need to test.
+ * @param {number} playerId - ID of the player that need to test.
  * @returns {Promise<LobbyClient | { id: number, playerId: string, playerName: string, password: string, gmail: string } | null>}
  */
-async function getLobbyPlayerInfo (clientId) {
-	const targetClient = lobbyClients.find(client => client.id == clientId);
+async function getLobbyPlayerInfo (playerId) {
+	const targetPlayer = lobbyPlayers.find(player => player.id == playerId);
 
-	if (targetClient) return targetClient;
+	if (targetPlayer) return targetPlayer;
 
 	try {
-		const response = await getPlayerDetailsByPlayerId(clientId);
+		const response = await getPlayerDetailsByPlayerId(playerId);
 		return response.data;
 	} catch (error) {
 		console.error(error);
@@ -135,36 +135,36 @@ async function getLobbyPlayerInfo (clientId) {
 }
 
 /**
- * When client disconnected from lobby server.
+ * When player disconnected from lobby server.
  * 
  * @param {WebSocket} ws 
  */
-function onClientClose (ws) {
-	console.log('Client disconnected');
+function onPlayerClose (ws) {
+	console.log('Player disconnected');
 
-	lobbyClients = lobbyClients.filter(client => client.ws != ws);
-	waitList = waitList.filter(client => client.ws != ws);
+	lobbyPlayers = lobbyPlayers.filter(player => player.ws != ws);
+	waitList = waitList.filter(player => player.ws != ws);
 }
 
 /**
- * Handle all incoming messages from lobby clients.
+ * Handle all incoming messages from lobby players.
  * 
  * @param {WebSocket} ws 
  * @param {*} msg 
  */
-function onMessageFromClient (ws, msg) {
+function onMessageFromPlayer (ws, msg) {
 	const msgData = JSON.parse(msg);
 
 	console.log(msgData);
 }
 
 /**
- * Send messages to lobby clients.
+ * Send messages to lobby players.
  * 
  * @param {WebSocket} ws 
  * @param {*} message 
  */
-function sendMessageToLobbyClient (ws, message) {
+function sendMessageToLobbyPlayer (ws, message) {
 	ws.send(JSON.stringify(message));
 }
 

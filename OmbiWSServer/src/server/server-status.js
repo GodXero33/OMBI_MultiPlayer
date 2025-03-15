@@ -42,8 +42,8 @@ export class ServerStatusAPI {
 	/**
 	 * Return object of complete server status.
 	 * 
-	 * @param {Array<LobbyClient>} lobbyPlayers 
-	 * @param {Array<LobbyClient>} waitList 
+	 * @param {Array<LobbyPlayer>} lobbyPlayers 
+	 * @param {Array<LobbyPlayer>} waitList 
 	 * @param {Array<{ worker: Worker, port: number }>} gameWSServers 
 	 * @returns {Promise<Array<{ online_players: Array<{ id: number, name: string }>, wait_list: Array<{ id: number, name: string }>, game_servers: Array<{ player: Array<number>, rooms: Array<{ players: Array<{ id: number }> }>, port: number }> }>}
 	 */
