@@ -10,14 +10,18 @@ function updateStatusInfo(data) {
 			<div class="section">
 				<h2>Online Players</h2>
 				<ul id="online-players">
-					${data.online_players.map(player => `<li>${player}</li>`).join('') || "<li>No players online</li>"}
+					${data.online_players.length > 0 
+						? data.online_players.map(player => `<li>ID: ${player.id}, Name: ${player.name}</li>`).join('')
+						: "<li>No players online</li>"}
 				</ul>
 			</div>
 			
 			<div class="section">
 				<h2>Wait List</h2>
 				<ul id="wait-list">
-					${data.wait_list.map(player => `<li>${player}</li>`).join('') || "<li>Empty</li>"}
+					${data.wait_list.length > 0 
+						? data.wait_list.map(player => `<li>${player}</li>`).join('')
+						: "<li>Empty</li>"}
 				</ul>
 			</div>
 
@@ -29,6 +33,34 @@ function updateStatusInfo(data) {
 							<p><strong>Port:</strong> ${server.port}</p>
 							<p><strong>Players:</strong> ${server.players.length}</p>
 							<p><strong>Rooms:</strong> ${server.rooms.length}</p>
+							
+							${server.players.length > 0 ? `
+								<h3>Players in this server:</h3>
+								<ul>
+									${server.players.map(playerId => {
+										const player = data.online_players.find(p => p.id === playerId);
+										if (player) {
+											return `<li>ID: ${player.id}, Name: ${player.name}</li>`;
+										} else {
+											return `
+												<li style="color: red;">
+													Warning: Player with ID ${playerId} has no access!
+												</li>`;
+										}
+									}).join('')}
+								</ul>
+							` : "<p>No players in this server.</p>"}
+
+							${server.rooms.length > 0 ? `
+								<h3>Rooms:</h3>
+								<ul>
+									${server.rooms.map(room => `
+										<li>
+											${room.players.map(player => `<span>ID: ${player.id}, Name: ${player.name}</span>`).join(' ')}
+										</li>
+									`).join('')}
+								</ul>
+							` : "<p>No rooms available.</p>"}
 						</div>
 					`).join('')}
 				</div>
@@ -38,7 +70,7 @@ function updateStatusInfo(data) {
 	`;
 }
 
-async function loadServerDetails () {
+async function loadServerDetails() {
 	try {
 		const response = await fetch(`${url}/server-status`);
 

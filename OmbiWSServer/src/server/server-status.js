@@ -1,5 +1,10 @@
 export class ServerStatusAPI {
-	// Return object of complete details about a game server.
+	/**
+	 * Return object of complete details about a game server.
+	 * 
+	 * @param {number} port 
+	 * @returns {Promise<any | null>}
+	 */
 	static async getGameServerStatus (port) {
 		try {
 			const res = await fetch(`http://localhost:${port}/server-status`);
@@ -13,7 +18,12 @@ export class ServerStatusAPI {
 		}
 	}
 
-	// Return object of complete details about game servers.
+	/**
+	 * Return object of complete details about game servers.
+	 * 
+	 * @param {Array<{ worker:Worker, port: number }>} gameWSServers 
+	 * @returns {Promise<Array<{ player: Array<number>, rooms: Array<{ players: Array<{ id: number }> }>, port: number }>>}
+	 */
 	static async getGameServersStatus (gameWSServers) {
 		const gameServersDetails = [];
 
@@ -29,13 +39,30 @@ export class ServerStatusAPI {
 		return gameServersDetails;
 	}
 
-	// Return object of complete server status.
+	/**
+	 * Return object of complete server status.
+	 * 
+	 * @param {Array<LobbyClient>} lobbyPlayers 
+	 * @param {Array<LobbyClient>} waitList 
+	 * @param {Array<{ worker: Worker, port: number }>} gameWSServers 
+	 * @returns {Promise<Array<{ online_players: Array<{ id: number, name: string }>, wait_list: Array<{ id: number, name: string }>, game_servers: Array<{ player: Array<number>, rooms: Array<{ players: Array<{ id: number }> }>, port: number }> }>}
+	 */
 	static async getServerStatus (lobbyPlayers, waitList, gameWSServers) {
 		const gameServersStatus = await ServerStatusAPI.getGameServersStatus(gameWSServers);
 
 		return {
-			online_players: lobbyPlayers.map(player => player.id),
-			wait_list: waitList.map(player => player.id),
+			online_players: lobbyPlayers.map(player => {
+				return {
+					id: player.id,
+					name: player.name
+				};
+			}),
+			wait_list: waitList.map(player => {
+				return {
+					id: player.id,
+					name: player.name
+				};
+			}),
 			game_servers: gameServersStatus
 		};
 	}

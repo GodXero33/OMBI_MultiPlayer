@@ -44,9 +44,16 @@ httpServer.listen(PORT, () => {
 	console.log(`API list server running on http://127.0.0.1:${PORT}`);
 });
 
-lobbyWSServer.on('connection', (ws, req) => {
+lobbyWSServer.on('connection', async (ws, req) => {
 	const clientId = req.url.split('/').pop();
-	const lobbyPlayerInfo = getLobbyPlayerInfo(clientId);
+
+	ws.on('message', (msg) => onMessageFromClient(ws, msg));
+	ws.on('close', () => onClientClose(ws));
+	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
+
+	console.log(`Client connected with ID: ${clientId}`);
+
+	const lobbyPlayerInfo = await getLobbyPlayerInfo(clientId);
 
 	if (lobbyPlayerInfo instanceof LobbyClient) {
 		sendMessageToLobbyClient(ws, { type: 'error', message: 'User already logged in.' });
@@ -60,13 +67,7 @@ lobbyWSServer.on('connection', (ws, req) => {
 		return;
 	}
 
-	console.log(`Client connected with ID: ${clientId}`);
-
 	lobbyClients.push(new LobbyClient(ws, lobbyPlayerInfo));
-
-	ws.on('message', (msg) => onMessageFromClient(ws, msg));
-	ws.on('close', () => onClientClose(ws));
-	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
 });
 
 /**
@@ -125,7 +126,8 @@ async function getLobbyPlayerInfo (clientId) {
 	if (targetClient) return targetClient;
 
 	try {
-		return await getPlayerDetailsByPlayerId(clientId);
+		const response = await getPlayerDetailsByPlayerId(clientId);
+		return response.data;
 	} catch (error) {
 		console.error(error);
 		return null;

@@ -75,7 +75,26 @@ gameWSServer.on('connection', (ws, req) => {
 
 parentPort.on('message', (message) => onMessageFromParent(message));
 
+/**
+ * 
+ * @param {Array<number>} ids 
+ */
+function makeNewRoom (ids) {
+	console.log(`New room: ${ids}`);
 
+	const newRoom = new GameRoom(ids);
+
+	newRoom.testClients(clients);
+	rooms.push(newRoom);
+
+	if (!newRoom.isFull()) waitingRooms.push(newRoom);
+}
+
+/**
+ * When message received from main server.
+ * 
+ * @param { { type: string, message: string, data: any } } message 
+ */
 function onMessageFromParent (message) {
 	const messageData = JSON.parse(message);
 
@@ -94,28 +113,31 @@ function onMessageFromParent (message) {
 	}
 }
 
-function makeNewRoom (ids) {
-	console.log(`New room: ${ids}`);
-
-	const newRoom = new GameRoom(ids);
-
-	newRoom.testClients(clients);
-	rooms.push(newRoom);
-
-	if (!newRoom.isFull()) waitingRooms.push(newRoom);
-}
-
-// Send message to main server.
+/**
+ * Send message to main server.
+ * 
+ * @param { { type: string, message: string, data: any } } message 
+ */
 function postMessageToParent (message) {
 	parentPort.postMessage(JSON.stringify(message));
 }
 
-// When message received from a game server client.
+/**
+ * When message received from a game server client.
+ * 
+ * @param {WebSocket} ws 
+ * @param { { type: string, message: string, data: any } } message 
+ */
 function onMessageFromGameServerClient (ws, message) {
 	console.log(`Received: ${message}\n\ton port:${PORT}`);
 }
 
-// Send message to client on a gameWSServer.
-function sendMessageToGameServerClient (client, message) {
-	client.send(JSON.stringify(message));
+/**
+ * Send message to client on a gameWSServer.
+ * 
+ * @param {WebSocket} ws 
+ * @param { { type: string, message: string, data: any } } message 
+ */
+function sendMessageToGameServerClient (ws, message) {
+	ws.send(JSON.stringify(message));
 }
