@@ -1,7 +1,8 @@
 export class LobbyClient {
-	constructor (ws, id) {
+	constructor (ws, lobbyPlayerInfo) {
 		this.ws = ws;
-		this.id = id;
+		this.id = lobbyPlayerInfo.playerId;
+		this.name = lobbyPlayerInfo.playerName;
 		this.inMatch = false;
 	}
 }

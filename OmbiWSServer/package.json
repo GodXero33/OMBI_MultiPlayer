@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-	  "start": "node src/start.js",
+    "start": "concurrently --raw \"node src/start.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "GodXero",
@@ -11,8 +11,12 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+    "electron": "^35.0.1",
     "express": "^4.21.2",
     "socket.io": "^4.8.1",
     "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

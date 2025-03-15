@@ -18,9 +18,19 @@ let waitingRooms = [];
 apiRouter.use(cors());
 apiRouter.use(express.json());
 
-// Get clients details on current game server.
-apiRouter.get('/clients', (req, res) => res.json({
-	count: clients.length
+// Get current server status of the current game server.
+apiRouter.get('/server-status', (req, res) => res.json({
+	players: clients.map(player => player.id),
+	rooms: rooms.map(room => {
+		return {
+			players: room.clients.map(player => {
+				return {
+					id: player.id
+				};
+			})
+		};
+	}),
+	port: PORT
 }));
 
 httpServer.listen(PORT, () => {
@@ -65,7 +75,7 @@ gameWSServer.on('connection', (ws, req) => {
 
 parentPort.on('message', (message) => onMessageFromParent(message));
 
-// When message received from main server.
+
 function onMessageFromParent (message) {
 	const messageData = JSON.parse(message);
 
@@ -109,7 +119,3 @@ function onMessageFromGameServerClient (ws, message) {
 function sendMessageToGameServerClient (client, message) {
 	client.send(JSON.stringify(message));
 }
-
-setInterval(() => {
-	rooms.forEach(room => room.log());
-}, 1000);

@@ -5,6 +5,7 @@ const { Worker } = require('worker_threads');
 const WebSocket = require('ws');
 const cors = require('cors');
 const { LobbyClient } = require('./models/client.lobby');
+const { ServerStatusAPI } = require('./server/server-status');
 
 const apiRouter = express();
 const httpServer = http.createServer(apiRouter);
@@ -31,11 +32,13 @@ apiRouter.post('/wait-list', (req, res) => {
 		checkWaitList();
 	}
 
-	console.log(waitList.length);
 	return res.json({ ok: true });
 });
 
-apiRouter.get('/server-status', (req, res) => res.json(getServerStatus()));
+apiRouter.get('/server-status', async (req, res) => {
+	const serverStatus = await ServerStatusAPI.getServerStatus(lobbyClients, waitList, gameWSServers);
+	res.json(serverStatus);
+});
 
 httpServer.listen(PORT, () => {
 	console.log(`API list server running on http://127.0.0.1:${PORT}`);
@@ -43,15 +46,15 @@ httpServer.listen(PORT, () => {
 
 lobbyWSServer.on('connection', (ws, req) => {
 	const clientId = req.url.split('/').pop();
-	const clientIdAvailability = getLobbyClientIDAvailability(clientId);
+	const lobbyPlayerInfo = getLobbyPlayerInfo(clientId);
 
-	if (clientIdAvailability == 1) {
+	if (lobbyPlayerInfo instanceof LobbyClient) {
 		sendMessageToLobbyClient(ws, { type: 'error', message: 'User already logged in.' });
 		ws.close();
 		return;
 	}
 
-	if (clientIdAvailability == 2) {
+	if (lobbyPlayerInfo == null) {
 		sendMessageToLobbyClient(ws, { type: 'error', message: 'Not a user.' });
 		ws.close();
 		return;
@@ -59,25 +62,16 @@ lobbyWSServer.on('connection', (ws, req) => {
 
 	console.log(`Client connected with ID: ${clientId}`);
 
-	lobbyClients.push(new LobbyClient(ws, clientId));
+	lobbyClients.push(new LobbyClient(ws, lobbyPlayerInfo));
 
 	ws.on('message', (msg) => onMessageFromClient(ws, msg));
 	ws.on('close', () => onClientClose(ws));
 	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
 });
 
-// Return object of complete server status.
-function getServerStatus () {
-	const status = {
-		lobbyClients,
-		waitList,
-		gameWSServers
-	};
-
-	return status;
-}
-
-// Check if wait list has at least four clients. If it is all clients push to available game server and empty wait list.
+/**
+ * Check if wait list has at least four clients. If it is all clients push to available game server and empty wait list.
+ */
 function checkWaitList () {
 	if (waitList.length != 2) return;
 
@@ -92,40 +86,57 @@ function checkWaitList () {
 	waitList.length = 0;
 }
 
-// Get currently available game server.
+/**
+ * Get currently available game server.
+ * 
+ * @returns { { worker: Worker, port: number } }
+ */
 function getAvailableGameServer () {
 	return gameWSServers[0];
 }
 
-// Check if the client id is available in the database.
-function isClientIdIsAvailablePlayerId (clientId) {
-	return true;
+/**
+ * Get player details from the database.
+ * 
+ * @param {number} clientId 
+ * @returns {Promise<{ id: number, playerId: string, playerName: string, password: string, gmail: string }>}
+ */
+function getPlayerDetailsByPlayerId (clientId) {
+	return new Promise((res, req) => {
+		fetch(`http://127.0.0.1:5501/player/get/${clientId}`).then(response => {
+			if (!response.ok) throw new Error('Failed to fetch player data.');
+
+			return response.json();
+		}).then(data => {
+			res(data);
+		}).catch(error => {
+			rej(error);
+		});
+	});
 }
 
 /**
- * 
- * @param {number} clientId - ID of the client that need to test.
- * @returns 1 if client already in the lobby, 2 if client is not a player signed up into system, 3 can connect to lobby server.
+ * @param {number} clientId - ID of the player that need to test.
+ * @returns {Promise<LobbyClient | { id: number, playerId: string, playerName: string, password: string, gmail: string } | null>}
  */
-function getLobbyClientIDAvailability (clientId) {
+async function getLobbyPlayerInfo (clientId) {
 	const targetClient = lobbyClients.find(client => client.id == clientId);
 
-	if (targetClient) return 1;
+	if (targetClient) return targetClient;
 
-	return isClientIdIsAvailablePlayerId(clientId) ? 3 : 2;
+	try {
+		return await getPlayerDetailsByPlayerId(clientId);
+	} catch (error) {
+		console.error(error);
+		return null;
+	}
 }
 
-// When clients id received, check client in the clients array and if found assign id to client.
-function assignIdToLobbyClient (id) {
-	const targetClient = lobbyClients.find(client => client.id == id);
-
-	if (!targetClient) return false;
-
-	targetClient.id = id;
-	return true;
-}
-
-// When client disconnected from lobby server.
+/**
+ * When client disconnected from lobby server.
+ * 
+ * @param {WebSocket} ws 
+ */
 function onClientClose (ws) {
 	console.log('Client disconnected');
 
@@ -133,38 +144,48 @@ function onClientClose (ws) {
 	waitList = waitList.filter(client => client.ws != ws);
 }
 
-// Handle all incoming messages from lobby clients.
+/**
+ * Handle all incoming messages from lobby clients.
+ * 
+ * @param {WebSocket} ws 
+ * @param {*} msg 
+ */
 function onMessageFromClient (ws, msg) {
 	const msgData = JSON.parse(msg);
 
 	console.log(msgData);
-
-	/* if (msgData.type === 'join-lobby') { // When client needs to join the lobby.
-		sendMessageToLobbyClient(ws, { type: 'join-lobby', status: assignIdToLobbyClient(ws, msgData.id) });
-		return;
-	} */
 }
 
-// Send messages to lobby clients.
+/**
+ * Send messages to lobby clients.
+ * 
+ * @param {WebSocket} ws 
+ * @param {*} message 
+ */
 function sendMessageToLobbyClient (ws, message) {
 	ws.send(JSON.stringify(message));
 }
 
-// Check availability of a port.
+/**
+ * Check availability of a port.
+ * 
+ * @param {number} port 
+ * @returns {Promise<number>}
+ */
 function checkPort (port) {
 	return new Promise((resolve) => {
 		const socket = net.connect(port, '127.0.0.1');
 
 		socket.once('connect', () => {
 			socket.destroy();
-			resolve(false);
+			resolve(0);
 		});
 
 		socket.once('error', (err) => {
 			if (err.code === 'ECONNREFUSED') {
 				resolve(port);
 			} else {
-				resolve(false);
+				resolve(0);
 			}
 		});
 
@@ -172,12 +193,17 @@ function checkPort (port) {
 
 		socket.once('timeout', () => {
 			socket.destroy();
-			resolve(false);
+			resolve(0);
 		});
 	});
 }
 
-// Get all available ports up to specific range(100) starting from main port(8081 - 8181).
+/**
+ * Get all available ports up to specific range(100) starting from main port(8081 - 8181).
+ * 
+ * @param {number} range 
+ * @returns {Promise<Array<number>>}
+ */
 async function getAvailablePorts (range = 100) {
 	const checks = [];
 	const start = PORT + 1;
@@ -190,12 +216,19 @@ async function getAvailablePorts (range = 100) {
 	return results.filter(Boolean);
 }
 
-// Send message to game a game server.
+/**
+ * Send message to game a game server.
+ * 
+ * @param {Worker} worker 
+ * @param {*} message 
+ */
 function postMessageToGameWSServer (worker, message) {
 	worker.postMessage(JSON.stringify(message));
 }
 
-// Start new game server on new worker.
+/**
+ * Start new game server on new worker.
+ */
 async function startGameWSServer () {
 	const availablePorts = await getAvailablePorts();
 
@@ -227,14 +260,18 @@ async function startGameWSServer () {
 	});
 }
 
-// Start two game servers when this thread start.
+/**
+ * Start two game servers when this thread start.
+ */
 async function startGameWSServers () {
 	const count = 2;
 
 	for (let i = 0; i < count; i++) await startGameWSServer();
 }
 
-// Close all game servers when main(this) server is killed.
+/**
+ * Close all game servers when main(this) server is killed.
+ */
 function stopAllGameWSServers () {
 	console.log('Shutting down all game servers...');
 
@@ -252,19 +289,3 @@ process.on('SIGINT', stopAllGameWSServers); // When press Ctrl.
 process.on('SIGTERM', stopAllGameWSServers); // When the system stops the program.
 
 startGameWSServers();
-
-// setInterval(() => {
-// 	gameWSServers.forEach(serverInfo => {
-// 		const port = serverInfo.port;
-
-// 		fetch(`http://localhost:${port}/clients`, { method: 'GET' }).then(res => {
-// 			if (!res.ok) throw new Error(`Failed to fetch clients details for port ${port}`);
-
-// 			return res.json();
-// 		}).then(data => {
-// 			console.warn(data);
-// 		}).catch(error => {
-// 			console.error(error);
-// 		});
-// 	});
-// }, 2000);
