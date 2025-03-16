@@ -6,12 +6,14 @@ import dev.shan.ombi.repository.custom.PlayerRepository;
 import dev.shan.ombi.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Primary
 @RequiredArgsConstructor
 public class PlayerServiceImpl implements PlayerService {
 	private final PlayerRepository playerRepository;

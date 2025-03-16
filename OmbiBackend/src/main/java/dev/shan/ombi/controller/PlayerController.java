@@ -12,7 +12,7 @@ import java.util.List;
 @CrossOrigin
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("player")
+@RequestMapping("/player")
 public class PlayerController {
 	private final PlayerService playerService;
 
