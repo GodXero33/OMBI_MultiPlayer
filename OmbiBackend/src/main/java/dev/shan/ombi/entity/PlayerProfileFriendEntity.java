@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlayerProfileFriendEntity {
-	private Long playerId;
+	private String playerId;
 	private String playerName;
 }

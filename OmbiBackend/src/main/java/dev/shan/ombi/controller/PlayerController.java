@@ -19,21 +19,18 @@ public class PlayerController {
 	@GetMapping("get/{player_id}")
 	public PlayerResponse<Player> get (@PathVariable("player_id") String playerId) {
 		final Player player = this.playerService.getByPlayerId(playerId);
-
 		return player == null ? new PlayerResponse<>(HttpStatus.NOT_FOUND, "Player not found with player id: " + playerId, null) : new PlayerResponse<>(HttpStatus.OK, "Player found with player id: " + playerId, player);
 	}
 
 	@GetMapping("get-all")
 	public PlayerResponse<List<Player>> getAll () {
 		final List<Player> players = this.playerService.getAll();
-
 		return players == null ? new PlayerResponse<>(HttpStatus.NOT_FOUND, "Failed to load players", List.of()) : new PlayerResponse<>(HttpStatus.OK, "All players loaded", players);
 	}
 
 	@PostMapping("add")
 	public PlayerResponse<Player> add (@RequestBody Player player) {
 		final Player addedPlayer = this.playerService.add(player);
-
 		return addedPlayer == null ? new PlayerResponse<>(HttpStatus.NOT_MODIFIED, "Player not added", null) : new PlayerResponse<>(HttpStatus.OK, "Player added", addedPlayer);
 	}
 

@@ -14,11 +14,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlayerProfileEntity {
-	private Long playerId;
-	private int score;
-	private int gamesPlayed;
-	private int wins;
-	private int losses;
+	private Long id;
+	private String playerId;
+	private Long score;
+	private Integer gamesPlayed;
+	private Integer wins;
+	private Integer losses;
 	private LocalDateTime lastLogin;
 	private List<PlayerProfileFriendEntity> friends;
 	private List<Reword> rewords;

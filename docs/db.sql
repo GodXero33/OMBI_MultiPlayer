@@ -14,7 +14,7 @@ CREATE TABLE player (
 
 CREATE TABLE player_profile (
 	player_id BIGINT,
-	score INT DEFAULT 0,
+	score BIGINT DEFAULT 0,
 	games_played INT DEFAULT 0,
 	wins INT DEFAULT 0,
 	losses INT DEFAULT 0,
