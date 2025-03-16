@@ -1,5 +1,5 @@
 
-export class GameClient {
+export class GamePlayer {
 	constructor (ws, id) {
 		this.ws = ws;
 		this.id = id;

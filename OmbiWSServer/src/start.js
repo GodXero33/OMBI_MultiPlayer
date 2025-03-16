@@ -4,167 +4,190 @@ const net = require('net');
 const { Worker } = require('worker_threads');
 const WebSocket = require('ws');
 const cors = require('cors');
-const { LobbyClient } = require('./models/client.lobby');
+const { LobbyPlayer } = require('./models/lobby-player');
+const { ServerStatusAPI } = require('./server/server-status');
 
 const apiRouter = express();
 const httpServer = http.createServer(apiRouter);
 const lobbyWSServer  = new WebSocket.Server({ server: httpServer });
 
 const PORT = 8080;
-let lobbyClients = [];
+let lobbyPlayers = [];
 let waitList = [];
 let gameWSServers = [];
 
 apiRouter.use(cors());
 apiRouter.use(express.json());
 
-// Add client to wait list.
+// Add player to wait list.
 apiRouter.post('/wait-list', (req, res) => {
-	const clientId = req.body.id;
-	const targetClient = lobbyClients.find(client => client.id == clientId);
+	const playerId = req.body.id;
+	const targetPlayer = lobbyPlayers.find(player => player.id == playerId);
 
-	// If target client is undefined or target client is a match, can't add to wait list.
-	if (!targetClient || targetClient.inMatch) return res.json({ ok: false });
+	// If target player is undefined or target player is a match, can't add to wait list.
+	if (!targetPlayer || targetPlayer.inMatch) return res.json({ ok: false });
 
-	if (!waitList.includes(targetClient)) {
-		waitList.push(targetClient);
+	if (!waitList.includes(targetPlayer)) {
+		waitList.push(targetPlayer);
 		checkWaitList();
 	}
 
-	console.log(waitList.length);
 	return res.json({ ok: true });
 });
 
-apiRouter.get('/server-status', (req, res) => res.json(getServerStatus()));
+apiRouter.get('/server-status', async (req, res) => {
+	const serverStatus = await ServerStatusAPI.getServerStatus(lobbyPlayers, waitList, gameWSServers);
+	res.json(serverStatus);
+});
 
 httpServer.listen(PORT, () => {
 	console.log(`API list server running on http://127.0.0.1:${PORT}`);
 });
 
-lobbyWSServer.on('connection', (ws, req) => {
-	const clientId = req.url.split('/').pop();
-	const clientIdAvailability = getLobbyClientIDAvailability(clientId);
+lobbyWSServer.on('connection', async (ws, req) => {
+	const playerId = req.url.split('/').pop();
 
-	if (clientIdAvailability == 1) {
-		sendMessageToLobbyClient(ws, { type: 'error', message: 'User already logged in.' });
-		ws.close();
-		return;
-	}
-
-	if (clientIdAvailability == 2) {
-		sendMessageToLobbyClient(ws, { type: 'error', message: 'Not a user.' });
-		ws.close();
-		return;
-	}
-
-	console.log(`Client connected with ID: ${clientId}`);
-
-	lobbyClients.push(new LobbyClient(ws, clientId));
-
-	ws.on('message', (msg) => onMessageFromClient(ws, msg));
-	ws.on('close', () => onClientClose(ws));
+	ws.on('message', (msg) => onMessageFromPlayer(ws, msg));
+	ws.on('close', () => onPlayerClose(ws));
 	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
+
+	console.log(`Player connected with ID: ${playerId}`);
+
+	const lobbyPlayerInfo = await getLobbyPlayerInfo(playerId);
+
+	if (lobbyPlayerInfo instanceof LobbyPlayer) {
+		sendMessageToLobbyPlayer(ws, { type: 'error', message: 'User already logged in.' });
+		ws.close();
+		return;
+	}
+
+	if (lobbyPlayerInfo == null) {
+		sendMessageToLobbyPlayer(ws, { type: 'error', message: 'Not a user.' });
+		ws.close();
+		return;
+	}
+
+	lobbyPlayers.push(new LobbyPlayer(ws, lobbyPlayerInfo));
 });
 
-// Return object of complete server status.
-function getServerStatus () {
-	const status = {
-		lobbyClients,
-		waitList,
-		gameWSServers
-	};
-
-	return status;
-}
-
-// Check if wait list has at least four clients. If it is all clients push to available game server and empty wait list.
+/**
+ * Check if wait list has at least four players. If it is all players push to available game server and empty wait list.
+ */
 function checkWaitList () {
 	if (waitList.length != 2) return;
 
 	const { worker, port } = getAvailableGameServer();
 	
-	postMessageToGameWSServer(worker, { type: 'new-room', ids: waitList.map(client => client.id) });
+	postMessageToGameWSServer(worker, { type: 'new-room', ids: waitList.map(player => player.id) });
 
-	waitList.forEach(client => {
-		sendMessageToLobbyClient(client.ws, { type: 'game-server-port', port });
+	waitList.forEach(player => {
+		sendMessageToLobbyPlayer(player.ws, { type: 'game-server-port', port });
 	});
 
 	waitList.length = 0;
 }
 
-// Get currently available game server.
+/**
+ * Get currently available game server.
+ * 
+ * @returns { { worker: Worker, port: number } }
+ */
 function getAvailableGameServer () {
 	return gameWSServers[0];
 }
 
-// Check if the client id is available in the database.
-function isClientIdIsAvailablePlayerId (clientId) {
-	return true;
+/**
+ * Get player details from the database.
+ * 
+ * @param {number} playerId 
+ * @returns {Promise<{ id: number, playerId: string, playerName: string, password: string, gmail: string }>}
+ */
+function getPlayerDetailsByPlayerId (playerId) {
+	return new Promise((res, req) => {
+		fetch(`http://127.0.0.1:5501/player/get/${playerId}`).then(response => {
+			if (!response.ok) throw new Error('Failed to fetch player data.');
+
+			return response.json();
+		}).then(data => {
+			res(data);
+		}).catch(error => {
+			rej(error);
+		});
+	});
 }
 
 /**
- * 
- * @param {number} clientId - ID of the client that need to test.
- * @returns 1 if client already in the lobby, 2 if client is not a player signed up into system, 3 can connect to lobby server.
+ * @param {number} playerId - ID of the player that need to test.
+ * @returns {Promise<LobbyClient | { id: number, playerId: string, playerName: string, password: string, gmail: string } | null>}
  */
-function getLobbyClientIDAvailability (clientId) {
-	const targetClient = lobbyClients.find(client => client.id == clientId);
+async function getLobbyPlayerInfo (playerId) {
+	const targetPlayer = lobbyPlayers.find(player => player.id == playerId);
 
-	if (targetClient) return 1;
+	if (targetPlayer) return targetPlayer;
 
-	return isClientIdIsAvailablePlayerId(clientId) ? 3 : 2;
+	try {
+		const response = await getPlayerDetailsByPlayerId(playerId);
+		return response.data;
+	} catch (error) {
+		console.error(error);
+		return null;
+	}
 }
 
-// When clients id received, check client in the clients array and if found assign id to client.
-function assignIdToLobbyClient (id) {
-	const targetClient = lobbyClients.find(client => client.id == id);
+/**
+ * When player disconnected from lobby server.
+ * 
+ * @param {WebSocket} ws 
+ */
+function onPlayerClose (ws) {
+	console.log('Player disconnected');
 
-	if (!targetClient) return false;
-
-	targetClient.id = id;
-	return true;
+	lobbyPlayers = lobbyPlayers.filter(player => player.ws != ws);
+	waitList = waitList.filter(player => player.ws != ws);
 }
 
-// When client disconnected from lobby server.
-function onClientClose (ws) {
-	console.log('Client disconnected');
-
-	lobbyClients = lobbyClients.filter(client => client.ws != ws);
-	waitList = waitList.filter(client => client.ws != ws);
-}
-
-// Handle all incoming messages from lobby clients.
-function onMessageFromClient (ws, msg) {
+/**
+ * Handle all incoming messages from lobby players.
+ * 
+ * @param {WebSocket} ws 
+ * @param {*} msg 
+ */
+function onMessageFromPlayer (ws, msg) {
 	const msgData = JSON.parse(msg);
 
 	console.log(msgData);
-
-	/* if (msgData.type === 'join-lobby') { // When client needs to join the lobby.
-		sendMessageToLobbyClient(ws, { type: 'join-lobby', status: assignIdToLobbyClient(ws, msgData.id) });
-		return;
-	} */
 }
 
-// Send messages to lobby clients.
-function sendMessageToLobbyClient (ws, message) {
+/**
+ * Send messages to lobby players.
+ * 
+ * @param {WebSocket} ws 
+ * @param {*} message 
+ */
+function sendMessageToLobbyPlayer (ws, message) {
 	ws.send(JSON.stringify(message));
 }
 
-// Check availability of a port.
+/**
+ * Check availability of a port.
+ * 
+ * @param {number} port 
+ * @returns {Promise<number>}
+ */
 function checkPort (port) {
 	return new Promise((resolve) => {
 		const socket = net.connect(port, '127.0.0.1');
 
 		socket.once('connect', () => {
 			socket.destroy();
-			resolve(false);
+			resolve(0);
 		});
 
 		socket.once('error', (err) => {
 			if (err.code === 'ECONNREFUSED') {
 				resolve(port);
 			} else {
-				resolve(false);
+				resolve(0);
 			}
 		});
 
@@ -172,12 +195,17 @@ function checkPort (port) {
 
 		socket.once('timeout', () => {
 			socket.destroy();
-			resolve(false);
+			resolve(0);
 		});
 	});
 }
 
-// Get all available ports up to specific range(100) starting from main port(8081 - 8181).
+/**
+ * Get all available ports up to specific range(100) starting from main port(8081 - 8181).
+ * 
+ * @param {number} range 
+ * @returns {Promise<Array<number>>}
+ */
 async function getAvailablePorts (range = 100) {
 	const checks = [];
 	const start = PORT + 1;
@@ -190,12 +218,19 @@ async function getAvailablePorts (range = 100) {
 	return results.filter(Boolean);
 }
 
-// Send message to game a game server.
+/**
+ * Send message to game a game server.
+ * 
+ * @param {Worker} worker 
+ * @param {*} message 
+ */
 function postMessageToGameWSServer (worker, message) {
 	worker.postMessage(JSON.stringify(message));
 }
 
-// Start new game server on new worker.
+/**
+ * Start new game server on new worker.
+ */
 async function startGameWSServer () {
 	const availablePorts = await getAvailablePorts();
 
@@ -227,14 +262,18 @@ async function startGameWSServer () {
 	});
 }
 
-// Start two game servers when this thread start.
+/**
+ * Start two game servers when this thread start.
+ */
 async function startGameWSServers () {
 	const count = 2;
 
 	for (let i = 0; i < count; i++) await startGameWSServer();
 }
 
-// Close all game servers when main(this) server is killed.
+/**
+ * Close all game servers when main(this) server is killed.
+ */
 function stopAllGameWSServers () {
 	console.log('Shutting down all game servers...');
 
@@ -252,19 +291,3 @@ process.on('SIGINT', stopAllGameWSServers); // When press Ctrl.
 process.on('SIGTERM', stopAllGameWSServers); // When the system stops the program.
 
 startGameWSServers();
-
-// setInterval(() => {
-// 	gameWSServers.forEach(serverInfo => {
-// 		const port = serverInfo.port;
-
-// 		fetch(`http://localhost:${port}/clients`, { method: 'GET' }).then(res => {
-// 			if (!res.ok) throw new Error(`Failed to fetch clients details for port ${port}`);
-
-// 			return res.json();
-// 		}).then(data => {
-// 			console.warn(data);
-// 		}).catch(error => {
-// 			console.error(error);
-// 		});
-// 	});
-// }, 2000);
