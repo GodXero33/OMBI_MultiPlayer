@@ -63,12 +63,12 @@ gameWSServer.on('connection', (ws, req) => {
 	ws.on('close', () => {
 		console.log('Player disconnected');
 		
-		const targetPlayer = clients.find(client => client.ws == ws);
+		const targetPlayer = players.find(player => player.ws == ws);
 
 		targetPlayer.room.close(); // On player close, target room close with all other players in the room.
 
 		rooms = rooms.filter(room => room.isOpen);
-		players = players.filter(client => client.ws != ws);
+		players = players.filter(player => player.ws != ws);
 	});
 	ws.on('error', (err) => console.error(`WebSocket error: ${err.message}`));
 });
