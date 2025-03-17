@@ -10,9 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlayerEntity {
-	private Long id;
-	private String playerId;
-	private String playerName;
+	private String id;
+	private String name;
 	private String password;
 	private String email;
 }

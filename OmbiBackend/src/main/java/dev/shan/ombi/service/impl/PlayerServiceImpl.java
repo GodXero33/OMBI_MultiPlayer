@@ -20,8 +20,8 @@ public class PlayerServiceImpl implements PlayerService {
 	private final ModelMapper modelMapper;
 
 	@Override
-	public Player getByPlayerId (String playerId) {
-		final PlayerEntity playerEntity = this.playerRepository.getByPlayerId(playerId);
+	public Player get (String playerId) {
+		final PlayerEntity playerEntity = this.playerRepository.get(playerId);
 		return playerEntity == null ? null : this.modelMapper.map(playerEntity, Player.class);
 	}
 
@@ -52,6 +52,6 @@ public class PlayerServiceImpl implements PlayerService {
 
 	@Override
 	public boolean delete (String playerId) {
-		return this.playerRepository.deleteByPlayerId(playerId);
+		return this.playerRepository.delete(playerId);
 	}
 }

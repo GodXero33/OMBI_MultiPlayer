@@ -16,7 +16,7 @@ public class PlayerProfileController {
 
 	@GetMapping("/get/{player_id}")
 	public PlayerProfileResponse<PlayerProfile> get (@PathVariable("player_id") String playerId) {
-		final PlayerProfile playerProfile = this.playerProfileService.getByPlayerId(playerId);
+		final PlayerProfile playerProfile = this.playerProfileService.get(playerId);
 		return playerProfile == null ? new PlayerProfileResponse<>(HttpStatus.NOT_FOUND, "Player profile not found with player id: " + playerId, null) : new PlayerProfileResponse<>(HttpStatus.OK, "Player profile found with player id: " + playerId, playerProfile);
 	}
 }

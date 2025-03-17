@@ -17,8 +17,8 @@ public class PlayerProfileServiceImpl implements PlayerProfileService {
 	private final ModelMapper modelMapper;
 
 	@Override
-	public PlayerProfile getByPlayerId (String playerId) {
-		final PlayerProfileEntity playerProfileEntity = this.playerProfileRepository.getByPlayerId(playerId);
+	public PlayerProfile get (String playerId) {
+		final PlayerProfileEntity playerProfileEntity = this.playerProfileRepository.get(playerId);
 		return playerProfileEntity == null ? null : this.modelMapper.map(playerProfileEntity, PlayerProfile.class);
 	}
 }

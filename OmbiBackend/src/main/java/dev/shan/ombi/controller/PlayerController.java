@@ -18,7 +18,7 @@ public class PlayerController {
 
 	@GetMapping("get/{player_id}")
 	public PlayerResponse<Player> get (@PathVariable("player_id") String playerId) {
-		final Player player = this.playerService.getByPlayerId(playerId);
+		final Player player = this.playerService.get(playerId);
 		return player == null ? new PlayerResponse<>(HttpStatus.NOT_FOUND, "Player not found with player id: " + playerId, null) : new PlayerResponse<>(HttpStatus.OK, "Player found with player id: " + playerId, player);
 	}
 

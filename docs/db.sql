@@ -3,9 +3,8 @@ CREATE DATABASE ombi_multiplayer;
 USE ombi_multiplayer;
 
 CREATE TABLE player (
-	id BIGINT AUTO_INCREMENT,
-	player_id VARCHAR(255) NOT NULL UNIQUE,
-	player_name VARCHAR(255) NOT NULL,
+	id VARCHAR(255),
+	name VARCHAR(255) NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	email VARCHAR(255) UNIQUE,
 	is_deleted BOOLEAN DEFAULT FALSE,
@@ -13,7 +12,7 @@ CREATE TABLE player (
 );
 
 CREATE TABLE player_profile (
-	player_id BIGINT,
+	player_id VARCHAR(255),
 	score BIGINT DEFAULT 0,
 	games_played INT DEFAULT 0,
 	wins INT DEFAULT 0,
@@ -27,18 +26,35 @@ CREATE TABLE player_profile (
 );
 
 CREATE TABLE player_friend (
-	player1_id BIGINT,
-	player2_id BIGINT,
+	player1_id VARCHAR(255),
+	player2_id VARCHAR(255),
 	PRIMARY KEY (player1_id, player2_id),
 	FOREIGN KEY (player1_id) REFERENCES player(id),
 	FOREIGN KEY (player2_id) REFERENCES player(id)
 );
 
+CREATE TABLE reword (
+	id INT AUTO_INCREMENT,
+	name VARCHAR(255) NOT NULL UNIQUE,
+	description VARCHAR(255) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE player_reword (
+	player_id VARCHAR(255),
+	reword_id INT,
+	PRIMARY KEY (player_id, reword_id),
+	FOREIGN KEY (player_id) REFERENCES player(id),
+	FOREIGN KEY (reword_id) REFERENCES reword(id)
+);
+
 DESC player;
 DESC player_profile;
 DESC player_friend;
+DESC reword;
+DESC player_reword;
 
-INSERT INTO player (player_id, player_name, password, email, is_deleted) VALUES
+INSERT INTO player (id, name, password, email, is_deleted) VALUES
 ('XJ7PQLA29D', 'PlayerOne', 'pass1234', 'playerone@example.com', FALSE),
 ('N8G5TZWMKX', 'GamerKing', 'securepwd', 'gamerking@example.com', FALSE),
 ('Y2V9DXRTQW', 'ShadowFox', 'hunter2', 'shadowfox@example.com', FALSE),
@@ -75,73 +91,148 @@ SELECT id, 0, 0, 0, 0, NOW(), FALSE
 FROM player;
 
 INSERT INTO player_friend (player1_id, player2_id) VALUES
-(1, 2),
-(1, 3),
-(2, 1),
-(2, 4),
-(3, 1),
-(3, 5),
-(4, 2),
-(4, 6),
-(5, 3),
-(5, 7),
-(6, 4),
-(6, 8),
-(7, 5),
-(7, 9),
-(8, 6),
-(8, 10),
-(9, 7),
-(9, 11),
-(10, 8),
-(10, 12),
-(11, 9),
-(11, 13),
-(12, 10),
-(12, 14),
-(13, 11),
-(13, 15),
-(14, 12),
-(14, 16),
-(15, 13),
-(15, 17),
-(16, 14),
-(16, 18),
-(17, 15),
-(17, 19),
-(18, 16),
-(18, 20),
-(19, 17),
-(19, 21),
-(20, 18),
-(20, 22),
-(21, 19),
-(21, 23),
-(22, 20),
-(22, 24),
-(23, 21),
-(23, 25),
-(24, 22),
-(24, 26),
-(25, 23),
-(25, 27),
-(26, 24),
-(26, 28),
-(27, 25),
-(27, 29),
-(28, 26),
-(28, 30),
-(29, 27),
-(29, 1),
-(30, 28),
-(30, 2);
+('XJ7PQLA29D', 'N8G5TZWMKX'),
+('XJ7PQLA29D', 'Y2V9DXRTQW'),
+('N8G5TZWMKX', 'XJ7PQLA29D'),
+('N8G5TZWMKX', 'B4L6MNZPQA'),
+('Y2V9DXRTQW', 'XJ7PQLA29D'),
+('Y2V9DXRTQW', 'K7XPZQW8LM'),
+('B4L6MNZPQA', 'N8G5TZWMKX'),
+('B4L6MNZPQA', 'QWLN7X5ZVD'),
+('K7XPZQW8LM', 'Y2V9DXRTQW'),
+('K7XPZQW8LM', 'ZMP38WLNYX'),
+('QWLN7X5ZVD', 'B4L6MNZPQA'),
+('QWLN7X5ZVD', 'TQXZL9WM28'),
+('ZMP38WLNYX', 'K7XPZQW8LM'),
+('ZMP38WLNYX', 'VWPMX8L72Q'),
+('TQXZL9WM28', 'QWLN7X5ZVD'),
+('TQXZL9WM28', 'A9KXQWLMP7'),
+('VWPMX8L72Q', 'ZMP38WLNYX'),
+('VWPMX8L72Q', 'MZXQ8WLN5T'),
+('A9KXQWLMP7', 'TQXZL9WM28'),
+('A9KXQWLMP7', 'WPLN9QX7ZM'),
+('MZXQ8WLN5T', 'VWPMX8L72Q'),
+('MZXQ8WLN5T', 'YXQLMP782W'),
+('WPLN9QX7ZM', 'A9KXQWLMP7'),
+('WPLN9QX7ZM', 'PQMZXLW872'),
+('YXQLMP782W', 'MZXQ8WLN5T'),
+('YXQLMP782W', 'KLX9QMPWT8'),
+('PQMZXLW872', 'WPLN9QX7ZM'),
+('PQMZXLW872', 'ZPQWLX87MT'),
+('KLX9QMPWT8', 'YXQLMP782W'),
+('KLX9QMPWT8', 'N8XWLQMPZ3'),
+('ZPQWLX87MT', 'PQMZXLW872'),
+('ZPQWLX87MT', 'XQMPZL9WT7'),
+('N8XWLQMPZ3', 'KLX9QMPWT8'),
+('N8XWLQMPZ3', 'MPXLQWN9T8'),
+('XQMPZL9WT7', 'ZPQWLX87MT'),
+('XQMPZL9WT7', 'LQMPZX8WT9'),
+('MPXLQWN9T8', 'N8XWLQMPZ3'),
+('MPXLQWN9T8', 'PWLXQMN87Z'),
+('LQMPZX8WT9', 'XQMPZL9WT7'),
+('LQMPZX8WT9', 'XLMPZQW87T'),
+('PWLXQMN87Z', 'MPXLQWN9T8'),
+('PWLXQMN87Z', 'MZPXWQLN78'),
+('XLMPZQW87T', 'LQMPZX8WT9'),
+('XLMPZQW87T', 'QWZPLMX78T'),
+('MZPXWQLN78', 'PWLXQMN87Z'),
+('MZPXWQLN78', 'NXQZMPWL87'),
+('QWZPLMX78T', 'XLMPZQW87T'),
+('QWZPLMX78T', 'LMPZXWQ89T'),
+('NXQZMPWL87', 'MZPXWQLN78'),
+('NXQZMPWL87', 'PQWLXMN98Z'),
+('LMPZXWQ89T', 'QWZPLMX78T'),
+('LMPZXWQ89T', 'MPXLQWN78Z'),
+('PQWLXMN98Z', 'NXQZMPWL87'),
+('PQWLXMN98Z', 'WLXQMPZ87N'),
+('MPXLQWN78Z', 'LMPZXWQ89T'),
+('MPXLQWN78Z', 'PXWZQLM87N'),
+('WLXQMPZ87N', 'PQWLXMN98Z'),
+('WLXQMPZ87N', 'XJ7PQLA29D'),
+('PXWZQLM87N', 'MPXLQWN78Z'),
+('PXWZQLM87N', 'N8G5TZWMKX');
 
 INSERT INTO player_friend (player1_id, player2_id)
-SELECT 2, 30
+SELECT 'N8G5TZWMKX', 'PXWZQLM87N'
 WHERE NOT EXISTS (
-    SELECT 30 FROM player_friend WHERE (player1_id = 30 AND player2_id = 2) OR (player1_id = 2 AND player2_id = 30)
+    SELECT 1 FROM player_friend 
+    WHERE (player1_id = 'N8G5TZWMKX' AND player2_id = 'PXWZQLM87N') 
+       OR (player1_id = 'PXWZQLM87N' AND player2_id = 'N8G5TZWMKX')
 );
+
+INSERT INTO reword (name, description) VALUES
+('First Victory', 'Awarded for winning your first game.'),
+('Card Master', 'Earned for playing 100 cards in total.'),
+('Comeback King', 'Win a game after having less than 10% of your initial points.'),
+('Unbeatable Streak', 'Achieve a winning streak of 5 games.'),
+('Strategic Genius', 'Win a game using only strategic card plays without relying on luck.');
+
+INSERT INTO player_reword (player_id, reword_id) VALUES
+('XJ7PQLA29D', 1),
+('XJ7PQLA29D', 2),
+('N8G5TZWMKX', 3),
+('N8G5TZWMKX', 4),
+('Y2V9DXRTQW', 5),
+('Y2V9DXRTQW', 1),
+('B4L6MNZPQA', 2),
+('B4L6MNZPQA', 3),
+('K7XPZQW8LM', 4),
+('K7XPZQW8LM', 5),
+('QWLN7X5ZVD', 1),
+('QWLN7X5ZVD', 2),
+('ZMP38WLNYX', 3),
+('ZMP38WLNYX', 4),
+('TQXZL9WM28', 5),
+('TQXZL9WM28', 1),
+('VWPMX8L72Q', 2),
+('VWPMX8L72Q', 3),
+('A9KXQWLMP7', 4),
+('A9KXQWLMP7', 5),
+('MZXQ8WLN5T', 1),
+('MZXQ8WLN5T', 2),
+('WPLN9QX7ZM', 3),
+('WPLN9QX7ZM', 4),
+('YXQLMP782W', 5),
+('YXQLMP782W', 1),
+('PQMZXLW872', 2),
+('PQMZXLW872', 3),
+('KLX9QMPWT8', 4),
+('KLX9QMPWT8', 5),
+('ZPQWLX87MT', 1),
+('ZPQWLX87MT', 2),
+('N8XWLQMPZ3', 3),
+('N8XWLQMPZ3', 4),
+('XQMPZL9WT7', 5),
+('XQMPZL9WT7', 1),
+('MPXLQWN9T8', 2),
+('MPXLQWN9T8', 3),
+('LQMPZX8WT9', 4),
+('LQMPZX8WT9', 5),
+('PWLXQMN87Z', 1),
+('PWLXQMN87Z', 2),
+('XLMPZQW87T', 3),
+('XLMPZQW87T', 4),
+('MZPXWQLN78', 5),
+('MZPXWQLN78', 1),
+('QWZPLMX78T', 2),
+('QWZPLMX78T', 3),
+('NXQZMPWL87', 4),
+('NXQZMPWL87', 5),
+('LMPZXWQ89T', 1),
+('LMPZXWQ89T', 2),
+('PQWLXMN98Z', 3),
+('PQWLXMN98Z', 4),
+('MPXLQWN78Z', 5),
+('MPXLQWN78Z', 1),
+('WLXQMPZ87N', 2),
+('WLXQMPZ87N', 3),
+('PXWZQLM87N', 4),
+('PXWZQLM87N', 5);
 
 SELECT * FROM player;
 SELECT * FROM player_profile;
 SELECT * FROM player_friend;
+SELECT * FROM reword;
+SELECT * FROM player_reword;
+
+SELECT r.name, r.description FROM reword r JOIN player_reword pr ON r.id = pr.reword_id WHERE pr.player_id = 'PXWZQLM87N';
