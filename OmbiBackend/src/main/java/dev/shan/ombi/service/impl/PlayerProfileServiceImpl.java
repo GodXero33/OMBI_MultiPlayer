@@ -9,6 +9,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Primary
 @RequiredArgsConstructor
@@ -20,5 +23,18 @@ public class PlayerProfileServiceImpl implements PlayerProfileService {
 	public PlayerProfile get (String playerId) {
 		final PlayerProfileEntity playerProfileEntity = this.playerProfileRepository.get(playerId);
 		return playerProfileEntity == null ? null : this.modelMapper.map(playerProfileEntity, PlayerProfile.class);
+	}
+
+	@Override
+	public List<PlayerProfile> getAll () {
+		final List<PlayerProfileEntity> playerProfileEntities = this.playerProfileRepository.getAll();
+
+		if (playerProfileEntities == null) return null;
+
+		final List<PlayerProfile> playerProfiles = new ArrayList<>();
+
+		playerProfileEntities.forEach(playerProfileEntity -> playerProfiles.add(this.modelMapper.map(playerProfileEntity, PlayerProfile.class)));
+
+		return playerProfiles;
 	}
 }

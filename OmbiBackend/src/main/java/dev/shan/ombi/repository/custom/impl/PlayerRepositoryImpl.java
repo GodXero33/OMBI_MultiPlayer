@@ -75,8 +75,25 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 		try {
 			this.connection.setAutoCommit(false);
 
-			if ((Integer) CrudUtil.execute("UPDATE player SET is_deleted = TRUE WHERE is_deleted = FALSE AND id = ?", id) != 1) throw new SQLException("Failed to update player record.");
-			if ((Integer) CrudUtil.execute("UPDATE player_profile SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) != 1) throw new SQLException("Failed to update player record.");
+			if ((Integer) CrudUtil.execute("UPDATE player SET is_deleted = TRUE WHERE is_deleted = FALSE AND id = ?", id) == 0) {
+				System.out.println("Player not found to delete.");
+				return true;
+			}
+
+			if ((Integer) CrudUtil.execute("UPDATE player_profile SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) == 0) {
+				System.out.println("Failed to delete player profile: " + id);
+				return false;
+			}
+
+			if ((Integer) CrudUtil.execute("DELETE FROM player_friend WHERE player1_id = ? OR player2_id = ?", id, id) == 0) {
+				System.out.println("Failed to delete friends of player: " + id);
+				return false;
+			}
+
+			if ((Integer) CrudUtil.execute("UPDATE player_reword SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) == 0) {
+				System.out.println("Failed to delete rewords of player: " + id);
+				return false;
+			}
 
 			this.connection.commit();
 			return true;

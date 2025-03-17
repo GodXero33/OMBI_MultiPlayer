@@ -37,15 +37,12 @@ public class PlayerProfileRepositoryImpl implements PlayerProfileRepository {
 
 	private List<PlayerProfileFriendEntity> getPlayerProfileFriendEntities (String playerId) throws SQLException {
 		final ResultSet playerFriendsResultSet = CrudUtil.execute("SELECT player1_id, player2_id FROM player_friend WHERE player1_id = ? OR player2_id = ?", playerId, playerId);
-		final Set<String> friendIdsSet = new HashSet<>();
 		final List<PlayerProfileFriendEntity> playerProfileFriendEntities = new ArrayList<>();
 
 		while (playerFriendsResultSet.next()) {
 			final String friend1Id = playerFriendsResultSet.getString(1);
 			final String friend2Id = playerFriendsResultSet.getString(2);
 			final String friendId = friend1Id.equals(playerId) ? friend2Id : friend1Id;
-
-			if (!friendIdsSet.add(friendId)) continue;
 
 			final ResultSet playerFriendNameResultSet = CrudUtil.execute("SELECT id, name FROM player WHERE is_deleted = FALSE AND id = ?", friendId);
 
@@ -59,7 +56,7 @@ public class PlayerProfileRepositoryImpl implements PlayerProfileRepository {
 	}
 
 	private List<Map<String, String>> getPlayerProfileRewords (String playerId) throws SQLException {
-		final ResultSet playerProfileRewordsResultSet = CrudUtil.execute("SELECT r.name, r.description FROM reword r JOIN player_reword pr ON r.id = pr.reword_id WHERE pr.player_id = ?", playerId);
+		final ResultSet playerProfileRewordsResultSet = CrudUtil.execute("SELECT r.name, r.description FROM reword r JOIN player_reword pr ON r.id = pr.reword_id WHERE AND pr.player_id = ?", playerId);
 		final List<Map<String, String>> rewordList = new ArrayList<>();
 
 		while (playerProfileRewordsResultSet.next()) {
@@ -105,6 +102,19 @@ public class PlayerProfileRepositoryImpl implements PlayerProfileRepository {
 
 	@Override
 	public List<PlayerProfileEntity> getAll () {
-		return List.of();
+		try {
+			final List<PlayerProfileEntity> playerProfileEntities = new ArrayList<>();
+			final List<String> playerIds = new ArrayList<>();
+			final ResultSet playerIdsResultSet = CrudUtil.execute("SELECT id FROM player WHERE is_deleted = FALSE");
+
+			while (playerIdsResultSet.next()) playerIds.add(playerIdsResultSet.getString(1));
+
+			playerIds.forEach(id -> playerProfileEntities.add(this.get(id)));
+
+			return playerProfileEntities;
+		} catch (SQLException exception) {
+			System.out.println(exception.getMessage());
+			return null;
+		}
 	}
 }
