@@ -11,10 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PlayerProfileRepositoryImpl implements PlayerProfileRepository {
 	private final Connection connection;
@@ -34,67 +31,87 @@ public class PlayerProfileRepositoryImpl implements PlayerProfileRepository {
 	}
 
 	@Override
-	public boolean delete (Long id) {
+	public boolean delete (String id) {
 		return false;
 	}
 
-	@Override
-	public PlayerProfileEntity get (Long id) {
-		return null;
+	private List<PlayerProfileFriendEntity> getPlayerProfileFriendEntities (String playerId) throws SQLException {
+		final ResultSet playerFriendsResultSet = CrudUtil.execute("SELECT player1_id, player2_id FROM player_friend WHERE player1_id = ? OR player2_id = ?", playerId, playerId);
+		final List<PlayerProfileFriendEntity> playerProfileFriendEntities = new ArrayList<>();
+
+		while (playerFriendsResultSet.next()) {
+			final String friend1Id = playerFriendsResultSet.getString(1);
+			final String friend2Id = playerFriendsResultSet.getString(2);
+			final String friendId = friend1Id.equals(playerId) ? friend2Id : friend1Id;
+
+			final ResultSet playerFriendNameResultSet = CrudUtil.execute("SELECT id, name FROM player WHERE is_deleted = FALSE AND id = ?", friendId);
+
+			if (playerFriendNameResultSet.next()) playerProfileFriendEntities.add(PlayerProfileFriendEntity.builder().
+				playerId(playerFriendNameResultSet.getString(1)).
+				playerName(playerFriendNameResultSet.getString(2)).
+				build());
+		}
+
+		return playerProfileFriendEntities;
+	}
+
+	private List<Map<String, String>> getPlayerProfileRewords (String playerId) throws SQLException {
+		final ResultSet playerProfileRewordsResultSet = CrudUtil.execute("SELECT r.name, r.description FROM reword r JOIN player_reword pr ON r.id = pr.reword_id WHERE AND pr.player_id = ?", playerId);
+		final List<Map<String, String>> rewordList = new ArrayList<>();
+
+		while (playerProfileRewordsResultSet.next()) {
+			final Map<String, String> playerRewordMap = new HashMap<>();
+
+			playerRewordMap.put("name", playerProfileRewordsResultSet.getString(1));
+			playerRewordMap.put("description", playerProfileRewordsResultSet.getString(2));
+			rewordList.add(playerRewordMap);
+		}
+
+		return rewordList;
 	}
 
 	@Override
-	public List<PlayerProfileEntity> getAll () {
-		return List.of();
-	}
-
-	@Override
-	public PlayerProfileEntity getByPlayerId (String playerId) {
+	public PlayerProfileEntity get (String id) {
 		try {
-			final ResultSet playerIdResultSet = CrudUtil.execute("SELECT id FROM player WHERE is_deleted = FALSE AND player_id = ?", playerId);
-
-			if (!playerIdResultSet.next()) throw new SQLException("Failed to retrieve player's ID from playerID.");
-
-			final long playerMainId = playerIdResultSet.getLong(1);
-			final ResultSet playerProfileResultSet = CrudUtil.execute("SELECT score, games_played, wins, losses, last_login, created_at, updated_at FROM player_profile WHERE is_deleted = FALSE AND player_id = ?", playerMainId);
+			final ResultSet playerProfileResultSet = CrudUtil.execute("SELECT p.name, pp.score, pp.games_played, pp.wins, pp.losses, pp.last_login, pp.created_at, pp.updated_at FROM player_profile pp JOIN player p ON pp.player_id = p.id WHERE pp.is_deleted = FALSE AND pp.player_id = ?", id);
 
 			if (!playerProfileResultSet.next()) throw new SQLException("Failed to retrieve player profile details.");
 
 			final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 			final PlayerProfileEntity playerProfileEntity = PlayerProfileEntity.builder().
-				id(playerMainId).
-				playerId(playerId).
-				score(playerProfileResultSet.getLong(1)).
-				gamesPlayed(playerProfileResultSet.getInt(2)).
-				wins(playerProfileResultSet.getInt(3)).
-				losses(playerProfileResultSet.getInt(4)).
-				lastLogin(LocalDateTime.parse(playerProfileResultSet.getString(5), formatter)).
-				createdAt(LocalDateTime.parse(playerProfileResultSet.getString(6), formatter)).
-				updatedAt(LocalDateTime.parse(playerProfileResultSet.getString(7), formatter)).
+				playerId(id).
+				playerName(playerProfileResultSet.getString(1)).
+				score(playerProfileResultSet.getLong(2)).
+				gamesPlayed(playerProfileResultSet.getInt(3)).
+				wins(playerProfileResultSet.getInt(4)).
+				losses(playerProfileResultSet.getInt(5)).
+				lastLogin(LocalDateTime.parse(playerProfileResultSet.getString(6), formatter)).
+				createdAt(LocalDateTime.parse(playerProfileResultSet.getString(7), formatter)).
+				updatedAt(LocalDateTime.parse(playerProfileResultSet.getString(8), formatter)).
 				build();
 
-			final ResultSet playerFriendsResultSet = CrudUtil.execute("SELECT player1_id, player2_id FROM player_friend WHERE player1_id = ? OR player2_id = ?", playerMainId, playerMainId);
-			final Set<Long> friendIdsSet = new HashSet<>();
-			final List<PlayerProfileFriendEntity> playerProfileFriendEntities = new ArrayList<>();
-
-			while (playerFriendsResultSet.next()) {
-				final long player1Id = playerFriendsResultSet.getLong(1);
-				final long player2Id = playerFriendsResultSet.getLong(2);
-				final long friendId = player1Id == playerMainId ? player1Id : player2Id;
-
-				if (!friendIdsSet.add(friendId)) continue;
-
-				final ResultSet playerFriendNameResultSet = CrudUtil.execute("SELECT player_id, player_name FROM player WHERE is_deleted = FALSE AND id = ?", friendId);
-
-				if (playerFriendNameResultSet.next()) playerProfileFriendEntities.add(PlayerProfileFriendEntity.builder().
-					playerId(playerFriendNameResultSet.getString(1)).
-					playerName(playerFriendNameResultSet.getString(2)).
-					build());
-			}
-
-			playerProfileEntity.setFriends(playerProfileFriendEntities);
+			playerProfileEntity.setFriends(this.getPlayerProfileFriendEntities(id));
+			playerProfileEntity.setRewords(this.getPlayerProfileRewords(id));
 
 			return playerProfileEntity;
+		} catch (SQLException exception) {
+			System.out.println(exception.getMessage());
+			return null;
+		}
+	}
+
+	@Override
+	public List<PlayerProfileEntity> getAll () {
+		try {
+			final List<PlayerProfileEntity> playerProfileEntities = new ArrayList<>();
+			final List<String> playerIds = new ArrayList<>();
+			final ResultSet playerIdsResultSet = CrudUtil.execute("SELECT id FROM player WHERE is_deleted = FALSE");
+
+			while (playerIdsResultSet.next()) playerIds.add(playerIdsResultSet.getString(1));
+
+			playerIds.forEach(id -> playerProfileEntities.add(this.get(id)));
+
+			return playerProfileEntities;
 		} catch (SQLException exception) {
 			System.out.println(exception.getMessage());
 			return null;

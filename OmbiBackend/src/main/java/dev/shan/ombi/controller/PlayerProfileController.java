@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin
 @RestController
 @RequiredArgsConstructor
@@ -16,7 +18,13 @@ public class PlayerProfileController {
 
 	@GetMapping("/get/{player_id}")
 	public PlayerProfileResponse<PlayerProfile> get (@PathVariable("player_id") String playerId) {
-		final PlayerProfile playerProfile = this.playerProfileService.getByPlayerId(playerId);
+		final PlayerProfile playerProfile = this.playerProfileService.get(playerId);
 		return playerProfile == null ? new PlayerProfileResponse<>(HttpStatus.NOT_FOUND, "Player profile not found with player id: " + playerId, null) : new PlayerProfileResponse<>(HttpStatus.OK, "Player profile found with player id: " + playerId, playerProfile);
+	}
+
+	@GetMapping("/get-all")
+	public PlayerProfileResponse<List<PlayerProfile>> getAll () {
+		final List<PlayerProfile> playerProfiles = this.playerProfileService.getAll();
+		return playerProfiles == null ? new PlayerProfileResponse<>(HttpStatus.NOT_FOUND, "Failed to load player profiles", List.of()) : new PlayerProfileResponse<>(HttpStatus.OK, "All player profiles are loaded", playerProfiles);
 	}
 }

@@ -23,19 +23,17 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 		try {
 			this.connection.setAutoCommit(false);
 
-			final long generatedId = CrudUtil.executeWithGeneratedKeys(
-				"INSERT INTO player (player_id, player_name, password, email) VALUES (?, ?, ?, ?)",
-				entity.getPlayerId(),
-				entity.getPlayerName(),
+			if ((Integer) CrudUtil.execute(
+				"INSERT INTO player (id, name, password, email) VALUES (?, ?, ?, ?)",
+				entity.getId(),
+				entity.getName(),
 				entity.getPassword(),
 				entity.getEmail()
-			);
+			) == 0) throw new SQLException("Failed to insert player record.");
 
-			if (generatedId == 0) throw new SQLException("Failed to insert player record.");
-			if ((Integer) CrudUtil.execute("INSERT INTO player_profile (player_id, score, games_played, wins, losses, last_login) VALUES (?, 0, 0, 0, 0, NOW())", generatedId) != 1) throw new SQLException("Failed to insert player profile record.");
+			if ((Integer) CrudUtil.execute("INSERT INTO player_profile (player_id, score, games_played, wins, losses, last_login) VALUES (?, 0, 0, 0, 0, NOW())", entity.getId()) != 1) throw new SQLException("Failed to insert player profile record.");
 
 			this.connection.commit();
-			entity.setId(generatedId);
 			return entity;
 		} catch (SQLException exception) {
 			System.out.println(exception.getMessage());
@@ -60,8 +58,8 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 	public PlayerEntity update (PlayerEntity entity) {
 		try {
 			return (Integer) CrudUtil.execute(
-				"UPDATE player SET player_name = ?, password = ?, email = ? WHERE is_deleted = FALSE AND id = ?",
-				entity.getPlayerName(),
+				"UPDATE player SET name = ?, password = ?, email = ? WHERE is_deleted = FALSE AND id = ?",
+				entity.getName(),
 				entity.getPassword(),
 				entity.getEmail(),
 				entity.getId()
@@ -72,24 +70,30 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 		}
 	}
 
-	private boolean deletedByFieldName (String fieldName, Object identifier) {
+	@Override
+	public boolean delete (String id) {
 		try {
 			this.connection.setAutoCommit(false);
 
-			final long id;
-
-			if (fieldName.equals("player_id")) {
-				final ResultSet playerIDResultSet = CrudUtil.execute("SELECT id FROM player WHERE is_deleted = FALSE AND " + fieldName + " = ?", identifier);
-
-				if (!playerIDResultSet.next()) throw new SQLException("Failed to retrieve player ID");
-
-				id = playerIDResultSet.getLong(1);
-			} else {
-				id = (Long) identifier;
+			if ((Integer) CrudUtil.execute("UPDATE player SET is_deleted = TRUE WHERE is_deleted = FALSE AND id = ?", id) == 0) {
+				System.out.println("Player not found to delete.");
+				return true;
 			}
 
-			if ((Integer) CrudUtil.execute("UPDATE player SET is_deleted = TRUE WHERE is_deleted = FALSE AND " + fieldName + " = ?", identifier) != 1) throw new SQLException("Failed to update player record.");
-			if ((Integer) CrudUtil.execute("UPDATE player_profile SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) != 1) throw new SQLException("Failed to update player record.");
+			if ((Integer) CrudUtil.execute("UPDATE player_profile SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) == 0) {
+				System.out.println("Failed to delete player profile: " + id);
+				return false;
+			}
+
+			if ((Integer) CrudUtil.execute("DELETE FROM player_friend WHERE player1_id = ? OR player2_id = ?", id, id) == 0) {
+				System.out.println("Failed to delete friends of player: " + id);
+				return false;
+			}
+
+			if ((Integer) CrudUtil.execute("UPDATE player_reword SET is_deleted = TRUE WHERE is_deleted = FALSE AND player_id = ?", id) == 0) {
+				System.out.println("Failed to delete rewords of player: " + id);
+				return false;
+			}
 
 			this.connection.commit();
 			return true;
@@ -113,20 +117,15 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 	}
 
 	@Override
-	public boolean delete (Long id) {
-		return this.deletedByFieldName("id", id);
-	}
-
-	private PlayerEntity getByFieldName (String filedName, Object identifier) {
+	public PlayerEntity get (String id) {
 		try {
-			final ResultSet resultSet = CrudUtil.execute("SELECT id, player_id, player_name, password, email FROM player WHERE is_deleted = FALSE AND " + filedName + " = ?", identifier);
+			final ResultSet resultSet = CrudUtil.execute("SELECT name, password, email FROM player WHERE is_deleted = FALSE AND id = ?", id);
 
 			if (resultSet.next()) return PlayerEntity.builder().
-				id(resultSet.getLong(1)).
-				playerId(resultSet.getString(2)).
-				playerName(resultSet.getString(3)).
-				password(resultSet.getString(4)).
-				email(resultSet.getString(5)).
+				id(id).
+				name(resultSet.getString(1)).
+				password(resultSet.getString(2)).
+				email(resultSet.getString(3)).
 				build();
 
 			return null;
@@ -137,22 +136,16 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 	}
 
 	@Override
-	public PlayerEntity get (Long id) {
-		return this.getByFieldName("id", id);
-	}
-
-	@Override
 	public List<PlayerEntity> getAll () {
 		try {
 			final List<PlayerEntity> playerEntities = new ArrayList<>();
-			final ResultSet resultSet = CrudUtil.execute("SELECT id, player_id, player_name, password, email FROM player WHERE is_deleted = FALSE");
+			final ResultSet resultSet = CrudUtil.execute("SELECT id, name, password, email FROM player WHERE is_deleted = FALSE");
 
 			while (resultSet.next()) playerEntities.add(PlayerEntity.builder().
-				id(resultSet.getLong(1)).
-				playerId(resultSet.getString(2)).
-				playerName(resultSet.getString(3)).
-				password(resultSet.getString(4)).
-				email(resultSet.getString(5)).
+				id(resultSet.getString(1)).
+				name(resultSet.getString(2)).
+				password(resultSet.getString(3)).
+				email(resultSet.getString(4)).
 				build());
 
 			return playerEntities;
@@ -160,15 +153,5 @@ public class PlayerRepositoryImpl implements PlayerRepository {
 			System.out.println(exception.getMessage());
 			return null;
 		}
-	}
-
-	@Override
-	public PlayerEntity getByPlayerId (String playerId) {
-		return this.getByFieldName("player_id", playerId);
-	}
-
-	@Override
-	public boolean deleteByPlayerId (String playerId) {
-		return this.deletedByFieldName("player_id", playerId);
 	}
 }
