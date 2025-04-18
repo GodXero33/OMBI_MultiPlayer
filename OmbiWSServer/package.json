@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "nodemon src/server.ts",
     "build": "tsc",
     "prod": "node dist/server.js"
   },
@@ -23,6 +23,7 @@
     "@types/socket.io": "^3.0.1",
     "@types/ws": "^8.18.1",
     "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
