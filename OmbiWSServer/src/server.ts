@@ -20,29 +20,29 @@ app.use(cors());
 	});
 })();
 
-const httpServer: Server = http.createServer(app);
-const wsServer: WebSocketServer = new WebSocket.Server({ server: httpServer });
+const httpServer = http.createServer(app);
+const wsServer = new WebSocket.Server({ server: httpServer });
 
-const CODES: any = {
+const CODES = {
 	'EXIST_CLIENT_RECONNECT': 3001
 };
 
-const lobbyPlayers: Array<WebSocket> = [];
+const lobbyPlayers = new Array<WebSocket>();
 
-wsServer.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
+wsServer.on('connection', (ws: WebSocket, req: http.IncomingMessage): void => {
 	const { query } = url.parse(req.url ?? '', true);
 
 	if (Number.isInteger(query.id)) return;
 
-	const id: number | undefined = Number.parseInt(query.id as string);
-	const type: string = query.type as string;
+	const id = Number.parseInt(query.id as string);
+	const type = query.type as string;
 
 	lobbyPlayers.push(ws);
 
 	console.log(`Client connected | id: ${id}, type: ${type}`);
 	ws.send(JSON.stringify({ type: 'state' }));
 
-	ws.on('message', (message: any) => {
+	ws.on('message', (message: any): void => {
 		try {
 			handleClientMessage(ws, JSON.parse(message));
 		} catch (err) {
@@ -50,26 +50,26 @@ wsServer.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
 		}
 	});
 
-	ws.on('close', () => {
+	ws.on('close', (): void => {
 		console.log('Client disconnected');
 
-		const index: number = lobbyPlayers.findIndex((wsCheck: WebSocket) => wsCheck === ws);
+		const index = lobbyPlayers.findIndex((wsCheck): boolean => wsCheck === ws);
 		if (index !== -1) lobbyPlayers.splice(index, 1);
 	});
 });
 
 function broadcast (ws: WebSocket, msg: any): void {
-	lobbyPlayers.forEach(player => {
+	lobbyPlayers.forEach((player): void => {
 		if (ws.readyState === WebSocket.OPEN) player.send(JSON.stringify(msg));
 	});
 }
 
-function handleClientMessage (ws: WebSocket, msg: any) {
+function handleClientMessage (ws: WebSocket, msg: any): void {
 	if (msg.type === 'test') broadcast(ws, msg);
 }
 
-function sendMessage (ws: WebSocket, msg: any) {
+function sendMessage (ws: WebSocket, msg: any): void {
 	if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
 }
 
-httpServer.listen(PORT, () => console.log(`Http Server & WebSocket Server running on http://localhost:${PORT}`));
+httpServer.listen(PORT, (): void => console.log(`Http Server & WebSocket Server running on http://localhost:${PORT}`));
