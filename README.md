@@ -8,8 +8,7 @@ OmbiArenaLK is a web-based platform designed for Sri Lankan players, particularl
 OMBI/
 ├── docs/              # Database schema, documentation, and reports
 ├── OmbiBackend/       # Java Spring Boot backend (Database, API, and Authentication)
-├── OmbiFrontend/      # Express.js static server (Serves UI)
-├── OmbiWSServer/      # Node.js WebSocket server (Real-time multiplayer)
+├── OmbiWSServer/      # Node.js WebSocket + Express.js server (Real-time multiplayer + UI serving)
 └── README.md          # Project overview and setup guide
 ```
 
@@ -22,7 +21,7 @@ OMBI/
 - **Future-proof:** AI bots, private matches, spectator mode, and tournaments
 
 ## 🛠️ Tech Stack
-- **Frontend:** Express.js (Static file serving)
+- **Frontend:** Served statically via Express.js from the WebSocket server
 - **Backend:** Java Spring Boot (Database, API, Authentication)
 - **WebSocket Server:** Node.js
 - **Database:** MySQL
@@ -43,33 +42,25 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-### 3️⃣ WebSocket Server Setup (Node.js)
+### 3️⃣ WebSocket + Frontend Server Setup (Node.js)
 ```sh
 cd OmbiWSServer
 npm install
+```
+
+In one terminal, start the game server:
+```sh
 node game-server.js
 ```
-In another terminal window:
+
+In another terminal, start the lobby server:
 ```sh
-cd OmbiWSServer
 node lobby-server.js
 ```
 
-### 4️⃣ Frontend Setup (Express.js Static Server)
-To set up your frontend, follow these steps:
+> ☝️ This also serves the frontend UI statically via Express from the same server.
 
-1. Navigate to the `OmbiFrontend` directory and install dependencies:
-    ```sh
-    cd OmbiFrontend
-    npm install
-    ```
-2. Start the Express server:
-    ```sh
-    node server.js
-    ```
-This will serve the frontend UI as a static website.
-
-### 5️⃣ Database Setup
+### 4️⃣ Database Setup
 In the `docs` folder, the `db.sql` file is provided for quick and error-free database creation. Simply import this file into your MySQL database to set up the schema.
 
 ## 📌 Future Enhancements
@@ -84,3 +75,4 @@ OmbiArenaLK aims to **modernize traditional Sri Lankan card games** while keepin
 ---
 🚀 *Work in progress. Stay tuned!*
 
+---
