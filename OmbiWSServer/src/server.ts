@@ -1,6 +1,6 @@
-import WebSocket, { WebSocketServer } from 'ws';
+import WebSocket from 'ws';
 import express from 'express';
-import http, { Server } from 'http';
+import http from 'http';
 import cors from 'cors';
 import url from 'url';
 import dotenv from 'dotenv';

@@ -1,32 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>WS Connect</title>
-	<script src="/config.js"></script>
-</head>
-<body>
-		<h1>WebSocket Connection: <span id="status">❌</span></h1>
-		<script>
-const port = window.CONFIG.WS_PORT;
-const id = crypto.randomUUID();
-const type = 'player';
-
-const socket = new WebSocket(`ws://localhost:${port}?id=${id}&type=${type}`);
-const status = document.getElementById('status');
-
-socket.onopen = () => {
-	status.textContent = '✅';
-	console.log('Connected!');
-};
-
-socket.onmessage = e => {
-	console.log('Message:', e.data);
-};
-
-socket.onclose = () => {
-	status.textContent = '❌';
-	console.warn('Disconnected');
-};
-		</script>
+	<head>
+		<title>WS Connect</title>
+		<script src="/config.js"></script>
+	</head>
+	<body>
+		<!-- <h1>WebSocket Connection: <span id="status">❌</span></h1> -->
 	</body>
 </html>
