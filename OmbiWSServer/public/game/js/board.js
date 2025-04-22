@@ -1,13 +1,44 @@
-export default class Board {
+class Card {
+	constructor (suit, value) {
+		this.suit = suit;
+		this.value = value;
+	}
+
+	toString () {
+		return `${this.suit}-${this.value.toString().padStart(2, '0')}`;
+	}
+}
+
+class Board {
 	constructor (cardsCont) {
 		this.cardsCont = cardsCont;
 		this.playerCards = [];
+		this.textures = [];
+		this.pack = [];
+		this.playerAPack = [];
+		this.playerBPack = [];
+		this.playerCPack = [];
+		this.playerDPack = [];
 
 		this.cardHideTranslateY = 300;
 		this.cardHideTimeout = 500;
 
 		this.isCardsSettingUp = false;
 		this.isCardsClearing = false;
+
+		this.#initPack();
+	}
+
+	#initPack () {
+		this.pack = [];
+
+		const suits = ['c', 'd', 'h', 's'];
+
+		suits.forEach(suit => {
+			for (let a = 6; a < 14; a++) {
+				this.pack.push(new Card(suit, a + 1));
+			}
+		});
 	}
 
 	setupCards () {
@@ -65,7 +96,7 @@ export default class Board {
 
 			this.isCardsClearing = true;
 
-			const cards = this.playerCards.filter(card => card);
+			const cards = this.playerCards.map(card => card);
 			this.playerCards.length = 0;
 
 			cards.forEach(card => card.style.transform = `translateY(${this.cardHideTranslateY}px)`);
@@ -78,4 +109,28 @@ export default class Board {
 			}, this.cardHideTimeout);
 		});
 	}
+
+	setTextures (textures) {
+		this.textures = textures;
+	}
+
+	static getRandomPacks (board) {
+		const pack = board.pack.map(card => card);
+
+		const packs = Array.from({ length: 4 }, () => new Array());
+
+		for (let a = 7; a < 14; a++) {
+			packs[0].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
+			packs[1].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
+			packs[2].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
+			packs[3].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
+		}
+
+		return packs;
+	}
 }
+
+export {
+	Card,
+	Board
+};
