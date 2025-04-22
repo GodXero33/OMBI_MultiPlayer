@@ -1,32 +1,18 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<title>WS Connect</title>
-	<script src="/config.js"></script>
-</head>
-<body>
-		<h1>WebSocket Connection: <span id="status">❌</span></h1>
-		<script>
-const port = window.CONFIG.WS_PORT;
-const id = crypto.randomUUID();
-const type = 'player';
-
-const socket = new WebSocket(`ws://localhost:${port}?id=${id}&type=${type}`);
-const status = document.getElementById('status');
-
-socket.onopen = () => {
-	status.textContent = '✅';
-	console.log('Connected!');
-};
-
-socket.onmessage = e => {
-	console.log('Message:', e.data);
-};
-
-socket.onclose = () => {
-	status.textContent = '❌';
-	console.warn('Disconnected');
-};
-		</script>
+<html lang="en" dir="ltr">
+	<head>
+		<title>WS Connect</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+		<link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+		<link rel="stylesheet" href="main.css">
+		<!-- <script src="/config.js"></script> -->
+		 <script type="module" src="js/sketch.js" defer></script>
+	</head>
+	<body>
+		<!-- <h1>WebSocket Connection: <span id="status">❌</span></h1> -->
+		 <div id="board-cont">
+			<div id="cards-cont"></div>
+		 </div>
 	</body>
 </html>
