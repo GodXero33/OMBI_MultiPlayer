@@ -2,7 +2,6 @@ import { Board } from "./board.js";
 
 const cardsCont = document.getElementById('cards-cont');
 const board = new Board(cardsCont);
-const cardTextures = new Map();
 
 console.log(board);
 // window.addEventListener('click', () => {
@@ -11,6 +10,7 @@ console.log(board);
 
 async function loadCardTextures () {
 	const suits = ['c', 'd', 'h', 's'];
+	const cardTextures = new Map();
 
 	const loadTexture = (url) => new Promise((resolve, reject) => {
 		const img = new Image();
@@ -29,6 +29,24 @@ async function loadCardTextures () {
 			cardTextures.set(url, await loadTexture(url));
 		}
 	}
+
+	return cardTextures;
+}
+
+function loadVillageTalk () {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const response = await fetch('res/data/ombi-village-talk.json');
+
+			if (!response.ok) throw new Error('Failed to fetch');
+
+			const messages = await response.json();
+
+			resolve(messages);
+		} catch (error) {
+			reject(`ombi-village-talk.json: ${error}`);
+		}
+	});
 }
 
 function initEvents () {
@@ -39,8 +57,9 @@ function initEvents () {
 
 async function init () {
 	try {
-		await loadCardTextures();
-		board.setTextures(cardTextures);
+		board.textures = await loadCardTextures();
+		board.villageTalkMessages = await loadVillageTalk();
+
 		board.setPack(JSON.stringify(Board.getRandomPacks(board)));
 		initEvents();
 	} catch (error) {

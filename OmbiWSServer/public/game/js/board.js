@@ -1,7 +1,8 @@
 class Card {
-	constructor (suit, value) {
+	constructor (suit, value, dom = null) {
 		this.suit = suit;
 		this.value = value;
+		this.dom = dom;
 	}
 
 	toString () {
@@ -21,12 +22,15 @@ class Board {
 		this.playerDPack = [];
 		this.playerSymbol = 0; // 0 - player, 1 - opponent right, 2 - ally, 3 - opponent left
 		this.currentChance = 0; // 0 - player, 1 - opponent right, 2 - ally, 3 - opponent left
+		this.trumpSuit = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
+		this.leadCard = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
 
 		this.cardHideTranslateY = 300;
 		this.cardHideTimeout = 500;
 
 		this.isCardsSettingUp = false;
 		this.isCardsClearing = false;
+		this.villageTalkMessages = null;
 
 		this.#initPack();
 	}
@@ -43,6 +47,16 @@ class Board {
 		});
 	}
 
+	#getPlayerPack (playerSymbol) {
+		return playerSymbol == 0 ?
+			this.playerAPack :
+			playerSymbol == 1 ?
+				this.playerBPack :
+				playerSymbol == 2 ?
+					this.playerCPack :
+					this.playerDPack;
+	}
+
 	setupCards () {
 		return new Promise((resolve, rejects) => {
 			if (this.isCardsSettingUp) {
@@ -56,17 +70,10 @@ class Board {
 
 			this.playerCards = Array.from({ length: 8 }, (_, index) => {
 				const cardDOM = document.createElement('div');
-				
-				const playerPack = this.playerSymbol == 0 ?
-					this.playerAPack :
-					this.playerSymbol == 1 ?
-						this.playerBPack :
-						this.playerSymbol == 2 ?
-							this.playerCPack :
-							this.playerDPack;
-
+				const playerPack = this.#getPlayerPack(this.playerSymbol);
 				const img = this.textures.get(playerPack[index].toString().replace('-', ''));
 
+				playerPack[index].dom = cardDOM;
 				cardDOM.style.transform = `translateY(${this.cardHideTranslateY}px)`;
 
 				cardDOM.classList.add('card');
@@ -123,10 +130,6 @@ class Board {
 		});
 	}
 
-	setTextures (textures) {
-		this.textures = textures;
-	}
-
 	async setPack (jsonData) {
 		try {
 			this.playerAPack.length = this.playerBPack.length = this.playerCPack.length = this.playerDPack.length = 0;
@@ -147,12 +150,32 @@ class Board {
 		}
 	}
 
+	#dropCard (card) {
+		console.log(card);
+	}
+
 	onclick (event) {
-		const clickedCard = this.playerCards.find(cardDOM => cardDOM === event.target || cardDOM.contains(event.target));
+		if (this.playerSymbol != this.currentChance) return;
+
+		const clickedCard = this.pack.find(card => card.dom && (card.dom === event.target || card.dom.contains(event.target)));
 
 		if (!clickedCard) return;
 
-		console.log(clickedCard);
+		if (clickedCard.suit === this.leadCard) {
+			this.#dropCard(clickedCard);
+			return;
+		}
+
+		const playerPack = this.#getPlayerPack(this.playerSymbol);
+
+		const isPlayerHasLeadCards = playerPack.findIndex(card => card.suit === this.leadCard) != -1;
+
+		if (isPlayerHasLeadCards) {
+			alert(this.villageTalkMessages['cardDoesNotMatchLeadSuit']);
+			return;
+		}
+
+		console.log(clickedCard, isPlayerHasLeadCards);
 	}
 
 	static getRandomPacks (board) {
@@ -161,10 +184,10 @@ class Board {
 		const packs = Array.from({ length: 4 }, () => new Array());
 
 		for (let a = 7; a < 15; a++) {
-			packs[0].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
-			packs[1].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
-			packs[2].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
-			packs[3].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
+			packs[0].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
+			packs[1].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
+			packs[2].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
+			packs[3].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
 		}
 
 		return packs;
