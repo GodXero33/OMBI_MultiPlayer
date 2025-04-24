@@ -19,6 +19,8 @@ class Board {
 		this.playerBPack = [];
 		this.playerCPack = [];
 		this.playerDPack = [];
+		this.playerSymbol = 0; // 0 - player, 1 - opponent right, 2 - ally, 3 - opponent left
+		this.currentChance = 0; // 0 - player, 1 - opponent right, 2 - ally, 3 - opponent left
 
 		this.cardHideTranslateY = 300;
 		this.cardHideTimeout = 500;
@@ -54,7 +56,16 @@ class Board {
 
 			this.playerCards = Array.from({ length: 8 }, (_, index) => {
 				const cardDOM = document.createElement('div');
-				const img = this.textures.get(this.playerAPack[index].toString().replace('-', ''));
+				
+				const playerPack = this.playerSymbol == 0 ?
+					this.playerAPack :
+					this.playerSymbol == 1 ?
+						this.playerBPack :
+						this.playerSymbol == 2 ?
+							this.playerCPack :
+							this.playerDPack;
+
+				const img = this.textures.get(playerPack[index].toString().replace('-', ''));
 
 				cardDOM.style.transform = `translateY(${this.cardHideTranslateY}px)`;
 
@@ -131,7 +142,17 @@ class Board {
 					playerPacks[a].push(packMap.get(data[a][b]));
 
 			this.setupCards();
-		} catch (error) {}
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	onclick (event) {
+		const clickedCard = this.playerCards.find(cardDOM => cardDOM === event.target || cardDOM.contains(event.target));
+
+		if (!clickedCard) return;
+
+		console.log(clickedCard);
 	}
 
 	static getRandomPacks (board) {

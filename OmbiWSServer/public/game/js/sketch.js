@@ -1,6 +1,7 @@
 import { Board } from "./board.js";
 
-const board = new Board(document.getElementById('cards-cont'));
+const cardsCont = document.getElementById('cards-cont');
+const board = new Board(cardsCont);
 const cardTextures = new Map();
 
 console.log(board);
@@ -30,11 +31,18 @@ async function loadCardTextures () {
 	}
 }
 
+function initEvents () {
+	cardsCont.addEventListener('click', event => {
+		board.onclick(event);
+	});
+}
+
 async function init () {
 	try {
 		await loadCardTextures();
 		board.setTextures(cardTextures);
 		board.setPack(JSON.stringify(Board.getRandomPacks(board)));
+		initEvents();
 	} catch (error) {
 		console.error(error);
 	}
