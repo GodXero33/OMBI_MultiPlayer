@@ -1,7 +1,7 @@
 import { Board } from "./board.js";
 
 const board = new Board(document.getElementById('cards-cont'));
-const cardTextures = [];
+const cardTextures = new Map();
 
 console.log(board);
 // window.addEventListener('click', () => {
@@ -22,18 +22,19 @@ async function loadCardTextures () {
 		img.addEventListener('error', reject);
 	});
 
-	for (const suit of suits)
-		for (let a = 1; a < 14; a++)
-			cardTextures.push(await loadTexture(`${suit}${(a + 1).toString().padStart(2, '0')}`));
+	for (const suit of suits) {
+		for (let a = 1; a < 14; a++) {
+			const url = `${suit}${(a + 1).toString().padStart(2, '0')}`;
+			cardTextures.set(url, await loadTexture(url));
+		}
+	}
 }
 
 async function init () {
 	try {
 		await loadCardTextures();
-		board.setupCards();
 		board.setTextures(cardTextures);
-		
-		console.log(Board.getRandomPacks(board));
+		board.setPack(JSON.stringify(Board.getRandomPacks(board)));
 	} catch (error) {
 		console.error(error);
 	}

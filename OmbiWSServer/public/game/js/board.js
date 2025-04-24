@@ -52,15 +52,17 @@ class Board {
 
 			this.playerCards.forEach(card => card.remove());
 
-			this.playerCards = Array.from({ length: 8 }, () => {
-				const card = document.createElement('div');
+			this.playerCards = Array.from({ length: 8 }, (_, index) => {
+				const cardDOM = document.createElement('div');
+				const img = this.textures.get(this.playerAPack[index].toString().replace('-', ''));
 
-				card.style.transform = `translateY(${this.cardHideTranslateY}px)`;
+				cardDOM.style.transform = `translateY(${this.cardHideTranslateY}px)`;
 
-				card.classList.add('card');
-				this.cardsCont.appendChild(card);
+				cardDOM.classList.add('card');
+				cardDOM.appendChild(img);
+				this.cardsCont.appendChild(cardDOM);
 
-				return card;
+				return cardDOM;
 			});
 
 			setTimeout(() => {
@@ -114,12 +116,30 @@ class Board {
 		this.textures = textures;
 	}
 
+	async setPack (jsonData) {
+		try {
+			this.playerAPack.length = this.playerBPack.length = this.playerCPack.length = this.playerDPack.length = 0;
+
+			const data = JSON.parse(jsonData);
+			const packMap = new Map();
+			const playerPacks = [this.playerAPack, this.playerBPack, this.playerCPack, this.playerDPack];
+
+			this.pack.forEach(card => packMap.set(card.toString(), card));
+
+			for (let a = 0; a < 4; a++)
+				for (let b = 0; b < 8; b++)
+					playerPacks[a].push(packMap.get(data[a][b]));
+
+			this.setupCards();
+		} catch (error) {}
+	}
+
 	static getRandomPacks (board) {
 		const pack = board.pack.map(card => card);
 
 		const packs = Array.from({ length: 4 }, () => new Array());
 
-		for (let a = 7; a < 14; a++) {
+		for (let a = 7; a < 15; a++) {
 			packs[0].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
 			packs[1].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
 			packs[2].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0]?.toString());
