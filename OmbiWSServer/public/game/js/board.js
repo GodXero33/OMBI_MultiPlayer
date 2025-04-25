@@ -29,7 +29,7 @@ class Board {
 		this.manager = null;
 		this.teamAHands = [];
 		this.teamBHands = [];
-		this.cardsOnBoardTimeout = 2000;
+		this.cardsOnBoardTimeout = 500;
 		this.roundBestHand = 0;
 	}
 
@@ -123,7 +123,6 @@ class Board {
 
 			const beforeCardsOnBoardRemove = () => {
 				const cardsOnBoardCopy = this.cardOnBoard.map(card => card);
-				console.log(bestRecord, this.cardOnBoard);
 
 				if (bestRecord.hand == 0) {
 					this.teamAHands.push(cardsOnBoardCopy);
@@ -158,6 +157,10 @@ class Board {
 
 	alert (message, type = 'warning') {
 		window.alert(`${type.toLocaleUpperCase()}: ${this.villageTalkMessages[message]}`);
+	}
+
+	reset () {
+		this.initPack();
 	}
 
 	static getRandomPacks (board) {
