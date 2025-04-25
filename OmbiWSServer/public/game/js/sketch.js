@@ -1,13 +1,12 @@
 import { Board } from "./board.js";
+import OmbiGameManager from "./ombi-game-manager.js";
 
 const cardsCont = document.getElementById('cards-cont');
 const throwArea = document.getElementById('throw-area');
 const board = new Board(cardsCont, throwArea);
+const gameManager = new OmbiGameManager(board);
 
-console.log(board);
-// window.addEventListener('click', () => {
-// 	board.clearCards().then(res => console.log(res)).catch(error => console.error(error));
-// });
+console.log(gameManager);
 
 async function loadCardTextures () {
 	const suits = ['c', 'd', 'h', 's'];
@@ -50,19 +49,13 @@ function loadVillageTalk () {
 	});
 }
 
-function initEvents () {
-	cardsCont.addEventListener('click', event => {
-		board.onclick(event);
-	});
-}
-
 async function init () {
 	try {
 		board.textures = await loadCardTextures();
 		board.villageTalkMessages = await loadVillageTalk();
 
-		board.setPack(JSON.stringify(Board.getRandomPacks(board)));
-		initEvents();
+		board.initPack();
+		gameManager.setPack(JSON.stringify(Board.getRandomPacks(board)));
 	} catch (error) {
 		console.error(error);
 	}
