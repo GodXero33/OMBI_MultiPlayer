@@ -1,7 +1,8 @@
 import { Board } from "./board.js";
 
 const cardsCont = document.getElementById('cards-cont');
-const board = new Board(cardsCont);
+const throwArea = document.getElementById('throw-area');
+const board = new Board(cardsCont, throwArea);
 
 console.log(board);
 // window.addEventListener('click', () => {

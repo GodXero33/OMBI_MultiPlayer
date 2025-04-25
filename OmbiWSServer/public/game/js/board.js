@@ -11,8 +11,10 @@ class Card {
 }
 
 class Board {
-	constructor (cardsCont) {
+	constructor (cardsCont, throwArea) {
 		this.cardsCont = cardsCont;
+		this.throwArea = throwArea;
+
 		this.playerCards = [];
 		this.textures = [];
 		this.pack = [];
@@ -24,6 +26,8 @@ class Board {
 		this.currentChance = 0; // 0 - player, 1 - opponent right, 2 - ally, 3 - opponent left
 		this.trumpSuit = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
 		this.leadCard = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
+		this.penaltyRedCards = [];
+		this.penaltyBlackCards = [];
 
 		this.cardHideTranslateY = 300;
 		this.cardHideTimeout = 500;
@@ -36,14 +40,18 @@ class Board {
 	}
 
 	#initPack () {
-		this.pack = [];
+		this.pack.length = 0;
+		this.penaltyRedCards.length = 0;
+		this.penaltyBlackCards.length = 0;
 
 		const suits = ['c', 'd', 'h', 's'];
 
 		suits.forEach(suit => {
-			for (let a = 6; a < 14; a++) {
-				this.pack.push(new Card(suit, a + 1));
-			}
+			for (let a = 7; a <= 14; a++)
+				this.pack.push(new Card(suit, a));
+
+			for (let a = 2; a <= 6; a++)
+				(suit === 'c' || suit === 's' ? this.penaltyBlackCards : this.penaltyRedCards).push(new Card(suit, a));
 		});
 	}
 
@@ -94,16 +102,16 @@ class Board {
 
 	#updateCardsTransform () {
 		const total = this.playerCards.length;
-		const maxAngle = 45;
+
+		const angleStep = 15;
 		const gap = 20;
 
-		const spread = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
+		const middleIndex = (total - 1) / 2;
 
-		this.playerCards.forEach((card, i) => {
-			const rotate = -maxAngle + (spread * i);
-			const offset = (i - (total - 1) / 2) * gap;
+		this.playerCards.forEach((card, index) => {
+			const delta = index - middleIndex;
 
-			card.style.transform = `translateX(${offset}px) rotate(${rotate}deg)`;
+			card.style.transform = `translateX(${delta * gap}px) rotate(${delta * angleStep}deg)`;
 		});
 	}
 
@@ -150,8 +158,23 @@ class Board {
 		}
 	}
 
-	#dropCard (card) {
-		console.log(card);
+	#dropCard (card, playerPack, hand) {
+		const dom = card.dom;
+		const handClass = hand == 0 ?
+			'bottom' :
+				hand == 1 ?
+					'right' :
+					hand == 2 ?
+						'top' : 'left';
+
+		dom.classList.add(handClass);
+		dom.style.removeProperty('transform');
+		this.throwArea.appendChild(dom);
+
+		playerPack.splice(playerPack.findIndex(testCard => testCard === card), 1);
+		this.playerCards.splice(this.playerCards.findIndex(testDOM => testDOM === dom), 1);
+
+		this.#updateCardsTransform();
 	}
 
 	onclick (event) {
@@ -161,21 +184,19 @@ class Board {
 
 		if (!clickedCard) return;
 
+		const playerPack = this.#getPlayerPack(this.playerSymbol);
+
 		if (clickedCard.suit === this.leadCard) {
-			this.#dropCard(clickedCard);
+			this.#dropCard(clickedCard, playerPack, this.playerSymbol);
 			return;
 		}
 
-		const playerPack = this.#getPlayerPack(this.playerSymbol);
-
-		const isPlayerHasLeadCards = playerPack.findIndex(card => card.suit === this.leadCard) != -1;
-
-		if (isPlayerHasLeadCards) {
+		if (playerPack.some(card => card.suit === this.leadCard)) {
 			alert(this.villageTalkMessages['cardDoesNotMatchLeadSuit']);
 			return;
 		}
 
-		console.log(clickedCard, isPlayerHasLeadCards);
+		this.#dropCard(clickedCard, playerPack, this.playerSymbol);
 	}
 
 	static getRandomPacks (board) {
