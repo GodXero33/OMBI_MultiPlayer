@@ -5,5 +5,5 @@ export default class OMBIPlayer {
 		this.pack = this.board.playerPacks[this.symbol];
 	}
 
-	requestMove () {}
+	requestMove (isRoundFirst = false) {}
 }

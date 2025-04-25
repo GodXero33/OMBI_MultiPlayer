@@ -22,8 +22,6 @@ export default class OMBIUserPlayer extends OMBIPlayer {
 			}
 
 			if (this.pack.some(card => card.suit === this.board.leadSuit)) {
-				this.canClick = false;
-
 				this.board.alert('cardDoesNotMatchLeadSuit');
 				return;
 			}
@@ -78,7 +76,7 @@ export default class OMBIUserPlayer extends OMBIPlayer {
 		});
 	}
 
-	requestMove () {
+	requestMove (isRoundFirst = false) {
 		this.canClick = true;
 		this.board.alert('playerChance', 'info');
 	}
