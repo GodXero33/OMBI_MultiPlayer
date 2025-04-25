@@ -16,11 +16,8 @@ export default class OmbiGameManager {
 		board.manager = this;
 	}
 
-	dropCard (hand) {
-		if (hand == 3) {
-			console.log(true);
-			return;
-		}
+	async dropCard (hand) {
+		if (hand == 3) await this.board.endRound();
 
 		this.currentChance = (this.currentChance + 1) % 4;
 

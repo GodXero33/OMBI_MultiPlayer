@@ -27,6 +27,9 @@ class Board {
 		this.cardHideTimeout = 500;
 		this.villageTalkMessages = null;
 		this.manager = null;
+		this.teamAHands = [];
+		this.teamBHands = [];
+		this.cardsOnBoardTimeout = 1000;
 	}
 
 	initPack () {
@@ -83,13 +86,50 @@ class Board {
 		dom.style.removeProperty('transform');
 		this.throwArea.appendChild(dom);
 
-		this.cardOnBoard.push(...playerPack.splice(playerPack.findIndex(testCard => testCard === card), 1));
+		this.cardOnBoard.push({ hand, card: playerPack.splice(playerPack.findIndex(testCard => testCard === card), 1)[0] });
 
 		if (this.roundIndex === 0) this.leadSuit = card.suit;
 		
 		this.roundIndex = (this.roundIndex + 1) % 4;
 
 		if (this.manager) this.manager.dropCard(hand);
+	}
+
+	endRound () {
+		return new Promise(resolve => {
+			let bestRecord = this.cardOnBoard[0];
+
+			for (let a = 1; a < this.cardOnBoard.length; a++) {
+				const record = this.cardOnBoard[a];
+				const recordCard = record.card;
+				const bestCard = bestRecord.card;
+
+				if (recordCard.suit === this.trumpSuit) {
+					if (bestCard.suit === this.trumpSuit) {
+						if (bestCard.value < recordCard.value) {
+							bestRecord = record;
+						}
+
+						continue;
+					}
+
+					bestRecord = record;
+					continue;
+				}
+
+				if (bestCard.suit !== this.trumpSuit && bestCard.value < recordCard.value) bestRecord = record;
+			}
+
+			(bestRecord.hand % 2 == 0 ? this.teamAHands : this.teamBHands).push(this.cardOnBoard.map(card => card));
+			
+			setTimeout(() => {
+				this.cardOnBoard.forEach(record => record.card.dom.remove());
+
+				this.cardOnBoard.length = 0;
+
+				resolve();
+			}, this.cardsOnBoardTimeout);
+		});
 	}
 
 	alert (message, type = 'warning') {
@@ -101,12 +141,9 @@ class Board {
 
 		const packs = Array.from({ length: 4 }, () => new Array());
 
-		for (let a = 7; a < 15; a++) {
-			packs[0].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
-			packs[1].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
-			packs[2].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
-			packs[3].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
-		}
+		for (let a = 7; a < 15; a++)
+			for (let b = 0; b < 4; b++)
+				packs[b].push(pack.splice(Math.floor(Math.random() * pack.length), 1)[0].toString());
 
 		return packs;
 	}
