@@ -29,7 +29,8 @@ class Board {
 		this.manager = null;
 		this.teamAHands = [];
 		this.teamBHands = [];
-		this.cardsOnBoardTimeout = 1000;
+		this.cardsOnBoardTimeout = 2000;
+		this.roundBestHand = 0;
 	}
 
 	initPack () {
@@ -89,7 +90,7 @@ class Board {
 		this.cardOnBoard.push({ hand, card: playerPack.splice(playerPack.findIndex(testCard => testCard === card), 1)[0] });
 
 		if (this.roundIndex === 0) this.leadSuit = card.suit;
-		
+
 		this.roundIndex = (this.roundIndex + 1) % 4;
 
 		if (this.manager) this.manager.dropCard(hand);
@@ -120,15 +121,38 @@ class Board {
 				if (bestCard.suit !== this.trumpSuit && bestCard.value < recordCard.value) bestRecord = record;
 			}
 
-			(bestRecord.hand % 2 == 0 ? this.teamAHands : this.teamBHands).push(this.cardOnBoard.map(card => card));
-			
-			setTimeout(() => {
+			const beforeCardsOnBoardRemove = () => {
+				const cardsOnBoardCopy = this.cardOnBoard.map(card => card);
+				console.log(bestRecord, this.cardOnBoard);
+
+				if (bestRecord.hand == 0) {
+					this.teamAHands.push(cardsOnBoardCopy);
+					this.cardOnBoard.forEach(record => record.card.dom.classList.add('remove-from-board-bottom'));
+				} else if (bestRecord.hand == 1) {
+					this.teamBHands.push(cardsOnBoardCopy);
+					this.cardOnBoard.forEach(record => record.card.dom.classList.add('remove-from-board-right'));
+				} else if (bestRecord.hand == 2) {
+					this.teamAHands.push(cardsOnBoardCopy);
+					this.cardOnBoard.forEach(record => record.card.dom.classList.add('remove-from-board-top'));
+				} else {
+					this.teamBHands.push(cardsOnBoardCopy);
+					this.cardOnBoard.forEach(record => record.card.dom.classList.add('remove-from-board-left'));
+				}
+			}
+
+			const removeCardsOnBoard = () =>{
 				this.cardOnBoard.forEach(record => record.card.dom.remove());
 
 				this.cardOnBoard.length = 0;
+				this.roundBestHand = bestRecord.hand;
 
 				resolve();
-			}, this.cardsOnBoardTimeout);
+			}
+
+			setTimeout(() => {
+				beforeCardsOnBoardRemove();
+				setTimeout(removeCardsOnBoard, this.cardsOnBoardTimeout * 0.5);
+			}, this.cardsOnBoardTimeout * 0.5);
 		});
 	}
 

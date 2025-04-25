@@ -63,6 +63,35 @@ body {
 	border: 2px solid #000000;
 	transform-origin: bottom center;
 	box-shadow: 0 0 5px #00000088;
+	transition: all 0.4s linear;
+}
+
+#throw-area .card[class*="remove-from-board"] {
+	opacity: 0;
+}
+
+#throw-area .card.remove-from-board-bottom {
+	bottom: 0 !important;
+	left: 50% !important;
+	transform: translate(-50%, 100%) !important;
+}
+
+#throw-area .card.remove-from-board-right {
+	right: 0 !important;
+	top: 50% !important;
+	transform: translate(100%, -50%) !important;
+}
+
+#throw-area .card.remove-from-board-top {
+	top: 0 !important;
+	left: 50% !important;
+	transform: translate(-50%, -100%) !important;
+}
+
+#throw-area .card.remove-from-board-left {
+	left: 0 !important;
+	top: 50% !important;
+	transform: translate(-100%, -50%) !important;
 }
 
 #throw-area .card.bottom {
