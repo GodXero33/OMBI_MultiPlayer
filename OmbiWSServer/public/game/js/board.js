@@ -11,9 +11,10 @@ class Card {
 }
 
 class Board {
-	constructor (cardsCont, throwArea) {
+	constructor (cardsCont, throwArea, alertManager) {
 		this.cardsCont = cardsCont;
 		this.throwArea = throwArea;
+		this.alertManager = alertManager;
 		this.textures = [];
 		this.pack = [];
 		this.playerPacks = Array.from({ length: 4 }, () => new Array());
@@ -156,7 +157,7 @@ class Board {
 	}
 
 	alert (message, type = 'warning') {
-		window.alert(`${type.toLocaleUpperCase()}: ${this.villageTalkMessages[message]}`);
+		this.alertManager.alert(`${type.toLocaleUpperCase()}: ${this.villageTalkMessages[message]}`);
 	}
 
 	reset () {

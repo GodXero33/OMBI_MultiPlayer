@@ -160,6 +160,49 @@ body {
 	pointer-events: none;
 }
 
+#alert-cont {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	transition: opacity 0.2s linear;
+	display: grid;
+	align-content: center;
+	justify-items: center;
+}
+
+#alert-message {
+	background-color: #000000;
+	color: #ffffff;
+	font-size: 2rem;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+#alert-close-btn {
+	padding: 1rem;
+	background-color: green;
+	color: #ffffff;
+	font-size: 1.7rem;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+#alert-close-btn input {
+	--webkit-appearance: none;
+	appearance: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+}
+
+#alert-cont:has( input:checked) {
+	pointer-events: none;
+	opacity: 0;
+}
+
 @container throw-area-cont (aspect-ratio < 1) {
 	#throw-area {
 		width: calc(100% - 50px);

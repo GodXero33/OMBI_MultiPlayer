@@ -81,6 +81,6 @@ export default class OMBIUserPlayer extends OMBIPlayer {
 
 	requestMove (isRoundFirst = false) {
 		this.canClick = true;
-		// this.board.alert('playerChance', 'info');
+		this.board.alert('playerChance', 'info');
 	}
 }

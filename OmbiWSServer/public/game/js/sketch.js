@@ -1,9 +1,13 @@
+import AlertManager from "./alert.js";
 import { Board } from "./board.js";
 import OmbiGameManager from "./ombi-game-manager.js";
 
 const cardsCont = document.getElementById('cards-cont');
 const throwArea = document.getElementById('throw-area');
-const board = new Board(cardsCont, throwArea);
+const alertMessage = document.getElementById('alert-message');
+const alertMessageOpenBtn = document.getElementById('alert-close-btn-check');
+const alertManager = new AlertManager(alertMessage, alertMessageOpenBtn);
+const board = new Board(cardsCont, throwArea, alertManager);
 const gameManager = new OmbiGameManager(board);
 
 console.log(gameManager);
