@@ -7,7 +7,10 @@ export default class OMBIUserPlayer extends OMBIPlayer {
 		this.canClick = true;
 
 		this.board.cardsCont.addEventListener('click', event => {
-			if (!this.canClick) return;
+			if (!this.canClick) {
+				this.board.alert('waitMovement');
+				return;
+			}
 
 			const clickedCard = this.pack.find(card => card.dom && (card.dom === event.target || card.dom.contains(event.target)));
 

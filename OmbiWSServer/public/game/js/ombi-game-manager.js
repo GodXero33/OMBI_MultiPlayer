@@ -1,3 +1,4 @@
+import { Board } from "./board.js";
 import OMBIBotPlayer from "./player/player-bot.js";
 import OMBIUserPlayer from "./player/player-user.js";
 
@@ -6,6 +7,7 @@ export default class OmbiGameManager {
 		this.board = board;
 		this.currentChance = 0;
 		this.roundFirst = 0;
+		this.previousRoundFirst = 0;
 
 		this.players = [
 			new OMBIUserPlayer(board, 0),
@@ -20,9 +22,18 @@ export default class OmbiGameManager {
 	async dropCard (hand, isRoundStart = false) {
 		if (hand == (this.roundFirst + 3) % 4) {
 			await this.board.endRound();
-			console.log(this.board.roundBestHand);
+
 			this.roundFirst = this.board.roundBestHand;
+
+			if (!this.players.some(player => player.pack.length != 0)) {
+				this.previousRoundFirst = (this.previousRoundFirst + 1) % 4;
+				console.log('Round over');
+				this.reset();
+				return;
+			}
+
 			this.dropCard(this.roundFirst, true);
+
 			return;
 		}
 
@@ -32,6 +43,14 @@ export default class OmbiGameManager {
 		} else {
 			this.players[hand].requestMove(hand === this.roundFirst);
 		}
+	}
+
+	reset () {
+		this.roundFirst = this.previousRoundFirst;
+		this.currentChance = this.previousRoundFirst;
+
+		this.board.reset();
+		this.setPack(JSON.stringify(Board.getRandomPacks(this.board)));
 	}
 
 	setPack (jsonData) {

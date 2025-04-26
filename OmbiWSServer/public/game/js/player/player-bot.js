@@ -4,7 +4,7 @@ export default class OMBIBotPlayer extends OMBIPlayer {
 	constructor (board, symbol) {
 		super(board, symbol);
 
-		this.waitTime = 1000;
+		this.waitTime = 500;
 	}
 
 	getBestCardWithCardsOnBoard () {

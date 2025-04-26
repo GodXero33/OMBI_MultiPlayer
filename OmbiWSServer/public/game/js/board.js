@@ -11,9 +11,12 @@ class Card {
 }
 
 class Board {
-	constructor (cardsCont, throwArea) {
+	constructor (cardsCont, throwArea, trumpIndicator, alertManager) {
 		this.cardsCont = cardsCont;
 		this.throwArea = throwArea;
+		this.trumpIndicator = trumpIndicator;
+		this.alertManager = alertManager;
+
 		this.textures = [];
 		this.pack = [];
 		this.playerPacks = Array.from({ length: 4 }, () => new Array());
@@ -29,8 +32,10 @@ class Board {
 		this.manager = null;
 		this.teamAHands = [];
 		this.teamBHands = [];
-		this.cardsOnBoardTimeout = 2000;
+		this.cardsOnBoardTimeout = 500;
 		this.roundBestHand = 0;
+
+		this.setTrump('c');
 	}
 
 	initPack () {
@@ -57,6 +62,25 @@ class Board {
 			for (let a = 2; a <= 6; a++)
 				(suit === 'c' || suit === 's' ? this.penaltyBlackCards : this.penaltyRedCards).push(new Card(suit, a));
 		});
+	}
+
+	setTrump (suit) {
+		const curTrumpIndicatorClass = this.trumpSuit === 'c' ?
+			'club' :
+			this.trumpSuit === 'd' ?
+				'diamond' :
+				this.trumpSuit === 'h' ?
+					'heart' : 'spade';
+
+		this.trumpSuit = suit;
+
+		this.trumpIndicator.classList.remove(curTrumpIndicatorClass);
+		this.trumpIndicator.classList.add(this.trumpSuit === 'c' ?
+			'club' :
+			this.trumpSuit === 'd' ?
+				'diamond' :
+				this.trumpSuit === 'h' ?
+					'heart' : 'spade');
 	}
 
 	async setPack (jsonData) {
@@ -123,7 +147,6 @@ class Board {
 
 			const beforeCardsOnBoardRemove = () => {
 				const cardsOnBoardCopy = this.cardOnBoard.map(card => card);
-				console.log(bestRecord, this.cardOnBoard);
 
 				if (bestRecord.hand == 0) {
 					this.teamAHands.push(cardsOnBoardCopy);
@@ -157,7 +180,11 @@ class Board {
 	}
 
 	alert (message, type = 'warning') {
-		window.alert(`${type.toLocaleUpperCase()}: ${this.villageTalkMessages[message]}`);
+		this.alertManager.alert(this.villageTalkMessages[message], type);
+	}
+
+	reset () {
+		this.initPack();
 	}
 
 	static getRandomPacks (board) {
