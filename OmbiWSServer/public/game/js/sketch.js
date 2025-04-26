@@ -6,8 +6,9 @@ const cardsCont = document.getElementById('cards-cont');
 const throwArea = document.getElementById('throw-area');
 const alertMessage = document.getElementById('alert-message');
 const alertMessageOpenBtn = document.getElementById('alert-close-btn-check');
+const trumpIndicator = document.getElementById('trump-indicator');
 const alertManager = new AlertManager(alertMessage, alertMessageOpenBtn);
-const board = new Board(cardsCont, throwArea, alertManager);
+const board = new Board(cardsCont, throwArea, trumpIndicator, alertManager);
 const gameManager = new OmbiGameManager(board);
 
 console.log(gameManager);

@@ -167,24 +167,60 @@ body {
 	width: 100%;
 	height: 100%;
 	transition: opacity 0.2s linear;
+}
+
+#alert-cont > div {
+	position: absolute;
+	padding: 0.5rem;
+	top: 50%;
+	left: 50%;
+	width: fit-content;
+	height: fit-content;
+	transform: translate(-50%, -50%);
+	background-color: #26ff8f;
 	display: grid;
 	align-content: center;
 	justify-items: center;
+	gap: 1rem;
+	border-radius: 1rem;
+	box-shadow: 0 0 5px #000000;
+	transition: transform 0.1s linear;
 }
 
 #alert-message {
-	background-color: #000000;
-	color: #ffffff;
-	font-size: 2rem;
+	position: relative;
+	padding: 0.5rem;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: 500px;
+	background-color: #28cf79;
+	color: #000000;
+	font-size: 1.5rem;
 	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	text-align: center;
+	font-weight: 900;
+	border-radius: 0.5rem;
+	box-shadow: inset 0 0 5px #000000;
 }
 
 #alert-close-btn {
-	padding: 1rem;
-	background-color: green;
-	color: #ffffff;
-	font-size: 1.7rem;
+	position: relative;
+	padding-block: 0.5rem;
+	padding-inline: 2rem;
+	background-color: #28cf79;
+	color: #000000;
+	font-size: 1.5rem;
 	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	text-align: center;
+	font-weight: 900;
+	border-radius: 0.5rem;
+	box-shadow: 0 0 5px #000000;
+	transition: background-color 0.2s linear;
+}
+
+#alert-close-btn:hover {
+	background-color: #33f792;
 }
 
 #alert-close-btn input {
@@ -201,6 +237,56 @@ body {
 #alert-cont:has( input:checked) {
 	pointer-events: none;
 	opacity: 0;
+}
+
+#alert-cont:has( input:checked) > div {
+	transform: translate(-50%, -50%) scale(0.6);
+}
+
+#trump-indicator {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 10%;
+	aspect-ratio: 1 / 1;
+}
+
+#trump-indicator div {
+	position: absolute;
+	left: 0;
+	width: 100%;
+}
+
+#trump-indicator div:first-child {
+	top: 0;
+	height: 100%;
+	background-position: center center;
+	background-size: 80% 80%;
+	background-repeat: no-repeat;
+}
+
+#trump-indicator.club div:first-child {
+	background-image: url(res/img/suits/club.png);
+}
+
+#trump-indicator.spade div:first-child {
+	background-image: url(res/img/suits/spade.png);
+}
+
+#trump-indicator.diamond div:first-child {
+	background-image: url(res/img/suits/diamond.png);
+}
+
+#trump-indicator.heart div:first-child {
+	background-image: url(res/img/suits/heart.png);
+}
+
+#trump-indicator div:last-child {
+	top: 100%;
+	height: fit-content;
+	font-size: 0.9rem;
+	font-weight: 900;
+	text-align: center;
 }
 
 @container throw-area-cont (aspect-ratio < 1) {
