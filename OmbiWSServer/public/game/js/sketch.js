@@ -7,9 +7,15 @@ const throwArea = document.getElementById('throw-area');
 const alertMessage = document.getElementById('alert-message');
 const alertMessageOpenBtn = document.getElementById('alert-close-btn-check');
 const trumpIndicator = document.getElementById('trump-indicator');
+const trumpAskCont = document.getElementById('trump-ask-prompt-cont');
+const trumpAskClub = document.getElementById('trump-ask-club');
+const trumpAskSpade = document.getElementById('trump-ask-spade');
+const trumpAskDiamond = document.getElementById('trump-ask-diamond');
+const trumpAskHeart = document.getElementById('trump-ask-heart');
+
 const alertManager = new AlertManager(alertMessage, alertMessageOpenBtn);
 const board = new Board(cardsCont, throwArea, trumpIndicator, alertManager);
-const gameManager = new OmbiGameManager(board);
+const gameManager = new OmbiGameManager(board, trumpAskCont, trumpAskClub, trumpAskSpade, trumpAskDiamond, trumpAskHeart);
 
 console.log(gameManager);
 

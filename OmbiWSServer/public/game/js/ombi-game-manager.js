@@ -3,20 +3,22 @@ import OMBIBotPlayer from "./player/player-bot.js";
 import OMBIUserPlayer from "./player/player-user.js";
 
 export default class OmbiGameManager {
-	constructor (board) {
+	constructor (board, trumpAskCont, trumpAskClub, trumpAskSpade, trumpAskDiamond, trumpAskHeart) {
 		this.board = board;
 		this.currentChance = 0;
 		this.roundFirst = 0;
 		this.previousRoundFirst = 0;
 
 		this.players = [
-			new OMBIUserPlayer(board, 0),
+			new OMBIUserPlayer(board, 0, trumpAskCont, trumpAskClub, trumpAskSpade, trumpAskDiamond, trumpAskHeart),
 			new OMBIBotPlayer(board, 1),
 			new OMBIBotPlayer(board, 2),
 			new OMBIBotPlayer(board, 3)
 		];
 
 		board.manager = this;
+
+		this.players[0].chooseTrump();
 	}
 
 	async dropCard (hand, isRoundStart = false) {
@@ -29,6 +31,8 @@ export default class OmbiGameManager {
 				this.previousRoundFirst = (this.previousRoundFirst + 1) % 4;
 				console.log('Round over');
 				this.reset();
+
+				await this.players[this.currentChance].chooseTrump();
 			}
 
 			this.dropCard(this.roundFirst, true);
@@ -54,7 +58,7 @@ export default class OmbiGameManager {
 		this.players.forEach(player => player.pack = this.board.playerPacks[player.symbol]);
 	}
 
-	setPack (jsonData) {
+	async setPack (jsonData) {
 		this.board.setPack(jsonData, this.players[0].symbol);
 		this.players[0].setupCards();
 	}

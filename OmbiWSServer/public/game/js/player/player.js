@@ -6,4 +6,6 @@ export default class OMBIPlayer {
 	}
 
 	requestMove (isRoundFirst = false) {}
+
+	chooseTrump () {}
 }

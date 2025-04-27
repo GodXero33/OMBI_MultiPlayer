@@ -39,4 +39,34 @@ export default class OMBIBotPlayer extends OMBIPlayer {
 			this.board.dropCard(bestCardInHand, this.pack, this.symbol);
 		}, this.waitTime);
 	}
+
+	chooseTrump () {
+		const packCountMap = new Map();
+		const packValueMap = new Map();
+
+		this.pack.forEach(card => packCountMap.set(card.suit, packCountMap.has(card.suit) ? packCountMap.get(card.suit) + 1 : 1));
+		this.pack.forEach(card => packValueMap.set(card.suit, packValueMap.has(card.suit) ? packValueMap.get(card.suit) + card.value : card.value));
+
+		let maxCountSuit = null;
+		let maxCount = -Infinity;
+
+		for (const [suit, count] of packCountMap) {
+			if (count > maxCount) {
+				maxCount = count;
+				maxCountSuit = suit;
+			}
+		}
+
+		let maxValueSuit = null;
+		let maxValue = -Infinity;
+
+		for (const [suit, value] of packValueMap) {
+			if (value > maxValue) {
+				maxValue = value;
+				maxValueSuit = suit;
+			}
+		}
+
+		this.board.setTrump(Math.random() > 0.5 ? maxCountSuit : maxValueSuit);
+	}
 }

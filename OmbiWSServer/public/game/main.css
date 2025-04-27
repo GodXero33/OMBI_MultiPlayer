@@ -289,6 +289,91 @@ body {
 	text-align: center;
 }
 
+#trump-ask-prompt-cont {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	transition: opacity 0.2s linear;
+}
+
+#trump-ask-prompt-cont.hide {
+	opacity: 0;
+	pointer-events: none;
+}
+
+#trump-ask-prompt-cont > div {
+	position: absolute;
+	padding: 0.5rem;
+	top: 50%;
+	left: 50%;
+	width: fit-content;
+	height: fit-content;
+	transform: translate(-50%, -50%);
+	background-color: #26ff8f;
+	display: grid;
+	align-content: center;
+	justify-items: center;
+	gap: 1rem;
+	border-radius: 1rem;
+	box-shadow: 0 0 5px #000000;
+	transition: transform 0.1s linear;
+}
+
+#trump-ask-prompt-cont > div > div:first-child {
+	position: relative;
+	padding: 0.5rem;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: 500px;
+	background-color: #28cf79;
+	color: #000000;
+	font-size: 1.5rem;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	text-align: center;
+	font-weight: 900;
+	border-radius: 0.5rem;
+	box-shadow: inset 0 0 5px #000000;
+}
+
+#trump-ask-prompt-cont > div > div:last-child {
+	width: 200px;
+	height: 50px;
+	display: flex;
+	gap: 5px;
+}
+
+#trump-ask-prompt-cont > div > div:last-child div {
+	width: 100%;
+	height: 100%;
+	background-position: center center;
+	background-size: 80% 80%;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+#trump-ask-prompt-cont > div > div:last-child div:nth-child(1) {
+	background-image: url(res/img/suits/club.png);
+}
+
+#trump-ask-prompt-cont > div > div:last-child div:nth-child(2) {
+	background-image: url(res/img/suits/spade.png);
+}
+
+#trump-ask-prompt-cont > div > div:last-child div:nth-child(3) {
+	background-image: url(res/img/suits/diamond.png);
+}
+
+#trump-ask-prompt-cont > div > div:last-child div:nth-child(4) {
+	background-image: url(res/img/suits/heart.png);
+}
+
+#trump-ask-prompt-cont > div > div:last-child div:hover {
+	filter: drop-shadow(0 0 5px #ff4e4e);
+}
+
 @container throw-area-cont (aspect-ratio < 1) {
 	#throw-area {
 		width: calc(100% - 50px);

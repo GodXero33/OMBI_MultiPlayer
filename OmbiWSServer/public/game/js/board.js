@@ -20,7 +20,7 @@ class Board {
 		this.textures = [];
 		this.pack = [];
 		this.playerPacks = Array.from({ length: 4 }, () => new Array());
-		this.trumpSuit = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
+		this.trumpSuit = null; // c ♣ | d ♦ | h ♥ | s ♠
 		this.leadSuit = 'c'; // c ♣ | d ♦ | h ♥ | s ♠
 		this.penaltyRedCards = [];
 		this.penaltyBlackCards = [];
@@ -60,11 +60,11 @@ class Board {
 			for (let a = 2; a <= 6; a++)
 				(suit === 'c' || suit === 's' ? this.penaltyBlackCards : this.penaltyRedCards).push(new Card(suit, a));
 		});
-
-		this.setTrump('c');
 	}
 
 	setTrump (suit) {
+		if (suit == null) return;
+
 		const curTrumpIndicatorClass = this.trumpSuit === 'c' ?
 			'club' :
 			this.trumpSuit === 'd' ?

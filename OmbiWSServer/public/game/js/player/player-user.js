@@ -1,11 +1,22 @@
 import OMBIPlayer from "./player.js";
 
 export default class OMBIUserPlayer extends OMBIPlayer {
-	constructor (board, symbol) {
+	constructor (board, symbol, trumpAskCont, trumpAskClub, trumpAskSpade, trumpAskDiamond, trumpAskHeart) {
 		super(board, symbol);
 
+		this.trumpAskCont = trumpAskCont;
+		this.trumpAskClub = trumpAskClub;
+		this.trumpAskSpade = trumpAskSpade;
+		this.trumpAskDiamond = trumpAskDiamond;
+		this.trumpAskHeart = trumpAskHeart;
 		this.canClick = true;
+		
+		this.chosenTrump = null;
 
+		this.#initEvents();
+	}
+
+	#initEvents () {
 		this.board.cardsCont.addEventListener('click', event => {
 			if (!this.canClick) {
 				this.board.alert('waitMovement');
@@ -82,5 +93,24 @@ export default class OMBIUserPlayer extends OMBIPlayer {
 	requestMove (isRoundFirst = false) {
 		this.canClick = true;
 		this.board.alert('playerChance', 'info');
+	}
+
+	chooseTrump () {
+		return new Promise(resolve => {
+			const trumpAskCont = this.trumpAskCont;
+			
+			trumpAskCont.classList.remove('hide');
+
+			function onclick () {
+				this.board.setTrump(this.suit);
+				trumpAskCont.classList.add('hide');
+				resolve();
+			}
+
+			this.trumpAskClub.addEventListener('click', onclick.bind({ suit: 'c', board: this.board }), { once: true });
+			this.trumpAskSpade.addEventListener('click', onclick.bind({ suit: 's', board: this.board }), { once: true });
+			this.trumpAskDiamond.addEventListener('click', onclick.bind({ suit: 'd', board: this.board }), { once: true });
+			this.trumpAskHeart.addEventListener('click', onclick.bind({ suit: 'h', board: this.board }), { once: true });
+		});
 	}
 }
