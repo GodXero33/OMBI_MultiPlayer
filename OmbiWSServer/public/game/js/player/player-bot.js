@@ -13,9 +13,7 @@ export default class OMBIBotPlayer extends OMBIPlayer {
 		if (leadCards.length == 0) {
 			const trumpCards = this.pack.filter(card => card.suit === this.board.trumpSuit);
 
-			if (trumpCards.length == 0) {
-				return this.pack[Math.floor(Math.random() * this.pack.length)];
-			}
+			if (trumpCards.length == 0) return this.pack[Math.floor(Math.random() * this.pack.length)];
 
 			return trumpCards[Math.floor(Math.random() * trumpCards.length)];
 		}

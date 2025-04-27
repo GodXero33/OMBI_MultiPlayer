@@ -29,7 +29,6 @@ export default class OmbiGameManager {
 				this.previousRoundFirst = (this.previousRoundFirst + 1) % 4;
 				console.log('Round over');
 				this.reset();
-				return;
 			}
 
 			this.dropCard(this.roundFirst, true);
@@ -51,6 +50,8 @@ export default class OmbiGameManager {
 
 		this.board.reset();
 		this.setPack(JSON.stringify(Board.getRandomPacks(this.board)));
+
+		this.players.forEach(player => player.pack = this.board.playerPacks[player.symbol]);
 	}
 
 	setPack (jsonData) {

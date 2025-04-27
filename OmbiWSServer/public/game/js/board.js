@@ -34,8 +34,6 @@ class Board {
 		this.teamBHands = [];
 		this.cardsOnBoardTimeout = 500;
 		this.roundBestHand = 0;
-
-		this.setTrump('c');
 	}
 
 	initPack () {
@@ -62,6 +60,8 @@ class Board {
 			for (let a = 2; a <= 6; a++)
 				(suit === 'c' || suit === 's' ? this.penaltyBlackCards : this.penaltyRedCards).push(new Card(suit, a));
 		});
+
+		this.setTrump('c');
 	}
 
 	setTrump (suit) {
